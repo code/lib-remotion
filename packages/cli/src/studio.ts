@@ -1,4 +1,5 @@
 import type {LogLevel} from '@remotion/renderer';
+import {BrowserSafeApis} from '@remotion/renderer/client';
 import {StudioServerInternals} from '@remotion/studio-server';
 import {ConfigInternals} from './config';
 import {getNumberOfSharedAudioTags} from './config/number-of-shared-audio-tags';
@@ -47,10 +48,12 @@ export const studioCommand = async (
 
 	if (!file) {
 		Log.error(
+			{indent: false, logLevel},
 			'No Remotion entrypoint was found. Specify an additional argument manually:',
 		);
-		Log.error('  npx remotion studio src/index.ts');
+		Log.error({indent: false, logLevel}, '  npx remotion studio src/index.ts');
 		Log.error(
+			{indent: false, logLevel},
 			'See https://www.remotion.dev/docs/register-root for more information.',
 		);
 		process.exit(1);
@@ -69,21 +72,29 @@ export const studioCommand = async (
 			});
 		});
 	}, logLevel);
-	let envVariables = getEnvironmentVariables((newEnvVariables) => {
-		StudioServerInternals.waitForLiveEventsListener().then((listener) => {
-			envVariables = newEnvVariables;
-			listener.sendEventToClient({
-				type: 'new-env-variables',
-				newEnvVariables,
+	let envVariables = getEnvironmentVariables(
+		(newEnvVariables) => {
+			StudioServerInternals.waitForLiveEventsListener().then((listener) => {
+				envVariables = newEnvVariables;
+				listener.sendEventToClient({
+					type: 'new-env-variables',
+					newEnvVariables,
+				});
 			});
-		});
-	}, logLevel);
+		},
+		logLevel,
+		false,
+	);
 
-	const maxTimelineTracks = ConfigInternals.getMaxTimelineTracks();
 	const keyboardShortcutsEnabled =
 		ConfigInternals.getKeyboardShortcutsEnabled();
 
 	const gitSource = getGitSource(remotionRoot);
+
+	const binariesDirectory =
+		BrowserSafeApis.options.binariesDirectoryOption.getValue({
+			commandLine: parsedCli,
+		}).value;
 
 	await StudioServerInternals.startStudio({
 		previewEntry: require.resolve('@remotion/studio/entry'),
@@ -96,7 +107,7 @@ export const studioCommand = async (
 		getEnvVariables: () => envVariables,
 		desiredPort,
 		keyboardShortcutsEnabled,
-		maxTimelineTracks,
+		maxTimelineTracks: ConfigInternals.getMaxTimelineTracks(),
 		remotionRoot,
 		userPassedPublicDir: ConfigInternals.getPublicDir(),
 		webpackOverride: ConfigInternals.getWebpackOverrideFn(),
@@ -114,5 +125,8 @@ export const studioCommand = async (
 		// @ts-expect-error
 		parsedCliOpen: parsedCli.open,
 		gitSource,
+		bufferStateDelayInMilliseconds:
+			ConfigInternals.getBufferStateDelayInMilliseconds(),
+		binariesDirectory,
 	});
 };

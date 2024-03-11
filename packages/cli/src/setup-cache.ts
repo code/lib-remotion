@@ -27,6 +27,8 @@ export const bundleOnCliOrTakeServeUrl = async ({
 	quietFlag,
 	outDir,
 	gitSource,
+	bufferStateDelayInMilliseconds,
+	maxTimelineTracks,
 }: {
 	fullPath: string;
 	remotionRoot: string;
@@ -44,6 +46,8 @@ export const bundleOnCliOrTakeServeUrl = async ({
 	quietFlag: boolean;
 	outDir: string | null;
 	gitSource: GitSource | null;
+	bufferStateDelayInMilliseconds: number | null;
+	maxTimelineTracks: number | null;
 }): Promise<{
 	urlOrBundle: string;
 	cleanup: () => void;
@@ -79,6 +83,8 @@ export const bundleOnCliOrTakeServeUrl = async ({
 		quietFlag,
 		outDir,
 		gitSource,
+		bufferStateDelayInMilliseconds,
+		maxTimelineTracks,
 	});
 
 	return {
@@ -101,6 +107,8 @@ export const bundleOnCli = async ({
 	quietFlag,
 	outDir,
 	gitSource,
+	maxTimelineTracks,
+	bufferStateDelayInMilliseconds,
 }: {
 	fullPath: string;
 	remotionRoot: string;
@@ -118,6 +126,8 @@ export const bundleOnCli = async ({
 	quietFlag: boolean;
 	outDir: string | null;
 	gitSource: GitSource | null;
+	maxTimelineTracks: number | null;
+	bufferStateDelayInMilliseconds: number | null;
 }) => {
 	const shouldCache = ConfigInternals.getWebpackCaching();
 
@@ -185,12 +195,14 @@ export const bundleOnCli = async ({
 		onSymlinkDetected,
 	};
 
-	const [hash] = BundlerInternals.getConfig({
+	const [hash] = await BundlerInternals.getConfig({
 		outDir: '',
 		entryPoint: fullPath,
 		onProgress,
 		options,
 		resolvedRemotionRoot: remotionRoot,
+		bufferStateDelayInMilliseconds,
+		maxTimelineTracks,
 	});
 	const cacheExistedBefore = BundlerInternals.cacheExists(
 		remotionRoot,
@@ -198,15 +210,12 @@ export const bundleOnCli = async ({
 		hash,
 	);
 	if (cacheExistedBefore !== 'does-not-exist' && !shouldCache) {
-		Log.infoAdvanced(
-			{indent, logLevel},
-			'🧹 Cache disabled but found. Deleting... ',
-		);
+		Log.info({indent, logLevel}, '🧹 Cache disabled but found. Deleting... ');
 		await BundlerInternals.clearCache(remotionRoot, 'production');
 	}
 
 	if (cacheExistedBefore === 'other-exists' && shouldCache) {
-		Log.infoAdvanced(
+		Log.info(
 			{indent, logLevel},
 			'🧹 Webpack config change detected. Clearing cache... ',
 		);
@@ -270,7 +279,7 @@ export const bundleOnCli = async ({
 			cacheExistedBefore === 'does-not-exist' ||
 			cacheExistedBefore === 'other-exists'
 		) {
-			Log.infoAdvanced(
+			Log.info(
 				{indent, logLevel},
 				'⚡️ Cached bundle. Subsequent renders will be faster.',
 			);

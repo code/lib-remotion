@@ -8,6 +8,34 @@ type Bug = {
 
 const bugs: Bug[] = [
   {
+    title: "Audio issues on Lambda",
+    description:
+      "The new seamless audio concatenation feature does not produce clean audio in all cases.",
+    link: "https://github.com/remotion-dev/remotion/pull/3518",
+    versions: ["4.0.124"],
+  },
+  {
+    title: "Videos have bad colors during rendering",
+    description:
+      "Videos could become too dark when rendering by being tone-mapped when they should not. Upgrade to 4.0.118.",
+    link: "https://github.com/remotion-dev/remotion/pull/3518",
+    versions: ["4.0.117"],
+  },
+  {
+    title: "Every render now by default emits a repro.zip",
+    description:
+      "This was unintentional and has been removed. Upgrade to 4.0.116.",
+    link: "https://remotion.dev/changelog",
+    versions: ["4.0.115"],
+  },
+  {
+    title: "Video playback in Studio and Player is broken",
+    description:
+      "OffthreadVideo, Video and Audio tags are affected. Upgrade to 4.0.113.",
+    link: "https://remotion.dev/changelog",
+    versions: ["4.0.111", "4.0.112"],
+  },
+  {
     title: "Remotion Lambda is broken",
     description: "A render would not start on the Lambda. Upgrade to 4.0.99.",
     link: "https://remotion.dev/changelog",

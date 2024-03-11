@@ -21,11 +21,11 @@ import {EditorShowRulersContext} from '../state/editor-rulers';
 import {EditorZoomGesturesContext} from '../state/editor-zoom-gestures';
 import type {ModalState} from '../state/modals';
 import {ModalsContext} from '../state/modals';
-import {PreviewSizeContext} from '../state/preview-size';
 import type {SidebarCollapsedState} from '../state/sidebar';
 import {SidebarContext} from '../state/sidebar';
 import {StudioServerConnectionCtx} from './client-id';
 import {getGitMenuItem} from './get-git-menu-item';
+import {useMobileLayout} from './mobile-layout';
 import {openInEditor} from './open-in-editor';
 import {pickColor} from './pick-color';
 import {areKeyboardShortcutsDisabled} from './use-keybinding';
@@ -195,7 +195,7 @@ export const useMenuStructure = (
 	const {editorShowGuides, setEditorShowGuides} = useContext(
 		EditorShowGuidesContext,
 	);
-	const {size, setSize} = useContext(PreviewSizeContext);
+	const {size, setSize} = useContext(Internals.PreviewSizeContext);
 	const {type} = useContext(StudioServerConnectionCtx).previewServerState;
 
 	const {
@@ -208,8 +208,9 @@ export const useMenuStructure = (
 	const isFullscreenSupported =
 		document.fullscreenEnabled || document.webkitFullscreenEnabled;
 
+	const mobileLayout = useMobileLayout();
 	const structure = useMemo((): Structure => {
-		const struct: Structure = [
+		let struct: Structure = [
 			{
 				id: 'remotion' as const,
 				label: (
@@ -527,10 +528,6 @@ export const useMenuStructure = (
 						type: 'divider' as const,
 					},
 					{
-						id: 'in-out-divider-4',
-						type: 'divider' as const,
-					},
-					{
 						id: 'quick-switcher',
 						keyHint: `${cmdOrCtrlCharacter}+K`,
 						label: 'Quick Switcher',
@@ -649,6 +646,20 @@ export const useMenuStructure = (
 								subMenu: null,
 								type: 'item' as const,
 								quickSwitcherLabel: 'Show Color Picker',
+							},
+							{
+								id: 'spring-editor',
+								value: 'spring-editor',
+								label: 'spring() Editor',
+								onClick: () => {
+									closeMenu();
+									window.open('https://springs.remotion.dev', '_blank');
+								},
+								leftItem: null,
+								keyHint: null,
+								subMenu: null,
+								type: 'item' as const,
+								quickSwitcherLabel: 'Open spring() Editor',
 							},
 						],
 						quickSwitcherLabel: null,
@@ -803,10 +814,37 @@ export const useMenuStructure = (
 				],
 			},
 		].filter(Internals.truthy);
+		if (mobileLayout) {
+			struct = [
+				{
+					...struct[0],
+					items: [
+						...struct.slice(1).map((s) => {
+							return {
+								...s,
+								keyHint: null,
+								onClick: () => undefined,
+								type: 'item' as const,
+								value: s.id,
+								leftItem: null,
+								subMenu: {
+									items: s.items,
+									leaveLeftSpace: true,
+									preselectIndex: 0,
+								},
+								quickSwitcherLabel: null,
+							} as SelectionItem;
+						}),
+						...struct[0].items,
+					],
+				},
+			];
+		}
 
 		return struct;
 	}, [
 		readOnlyStudio,
+		mobileLayout,
 		sizes,
 		editorZoomGestures,
 		editorShowRulers,

@@ -74,7 +74,12 @@ const innerStillHandler = async ({
 
 	validateDownloadBehavior(lambdaParams.downloadBehavior);
 	validatePrivacy(lambdaParams.privacy, true);
-	validateOutname(lambdaParams.outName, null, null);
+	validateOutname({
+		outName: lambdaParams.outName,
+		codec: null,
+		audioCodecSetting: null,
+		separateAudioTo: null,
+	});
 
 	const start = Date.now();
 
@@ -119,6 +124,7 @@ const innerStillHandler = async ({
 		logLevel: lambdaParams.logLevel,
 		webpackConfigOrServeUrl: serveUrl,
 		offthreadVideoCacheSizeInBytes: lambdaParams.offthreadVideoCacheSizeInBytes,
+		binariesDirectory: null,
 	});
 
 	const browserInstance = await browserInstancePromise;
@@ -157,8 +163,6 @@ const innerStillHandler = async ({
 		renderId,
 		outName: lambdaParams.outName ?? undefined,
 		privacy: lambdaParams.privacy,
-		everyNthFrame: 1,
-		frameRange: [lambdaParams.frame, lambdaParams.frame],
 		audioCodec: null,
 		deleteAfter: lambdaParams.deleteAfter,
 		numberOfGifLoops: null,
@@ -209,6 +213,7 @@ const innerStillHandler = async ({
 				data: composition.props,
 			}).serializedString,
 		offthreadVideoCacheSizeInBytes: lambdaParams.offthreadVideoCacheSizeInBytes,
+		binariesDirectory: null,
 	});
 
 	const {key, renderBucketName, customCredentials} = getExpectedOutName(

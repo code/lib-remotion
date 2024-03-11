@@ -129,6 +129,8 @@ type RenderJobDynamicFields =
 			disallowParallelEncoding: boolean;
 			offthreadVideoCacheSizeInBytes: number | null;
 			colorSpace: ColorSpace;
+			forSeamlessAacConcatenation: boolean;
+			separateAudioTo: string | null;
 	  } & RenderJobDynamicStatus);
 
 import type {ChromiumOptions, OpenGlRenderer} from '@remotion/renderer';
@@ -151,6 +153,7 @@ export type RenderJob = {
 	multiProcessOnLinux: boolean;
 	beepOnFinish: boolean;
 	repro: boolean;
+	binariesDirectory: string | null;
 } & RenderJobDynamicFields;
 
 export type RenderJobWithCleanup = RenderJob & {

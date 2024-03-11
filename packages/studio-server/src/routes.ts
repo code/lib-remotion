@@ -7,7 +7,8 @@ import type {
 	RenderJob,
 	SymbolicatedStackFrame,
 } from '@remotion/studio-shared';
-import {SOURCE_MAP_ENDPOINT} from '@remotion/studio-shared';
+import {getProjectName, SOURCE_MAP_ENDPOINT} from '@remotion/studio-shared';
+import fs, {createWriteStream} from 'fs';
 import {createReadStream, existsSync, statSync} from 'node:fs';
 import type {IncomingMessage, ServerResponse} from 'node:http';
 import path, {join} from 'node:path';
@@ -92,6 +93,11 @@ const handleFallback = async ({
 			renderDefaults: getRenderDefaults(),
 			publicFolderExists: existsSync(publicDir) ? publicDir : null,
 			gitSource,
+			projectName: getProjectName({
+				basename: path.basename,
+				gitSource,
+				resolvedRemotionRoot: remotionRoot,
+			}),
 		}),
 	);
 };
@@ -144,6 +150,7 @@ const handleOpenInEditor = async (
 	remotionRoot: string,
 	req: IncomingMessage,
 	res: ServerResponse,
+	logLevel: LogLevel,
 ) => {
 	if (req.method === 'OPTIONS') {
 		res.statusCode = 200;
@@ -168,6 +175,7 @@ const handleOpenInEditor = async (
 			fileName: path.resolve(remotionRoot, stack.originalFileName as string),
 			lineNumber: stack.originalLineNumber as number,
 			vsCodeNewWindow: false,
+			logLevel,
 		});
 		res.setHeader('content-type', 'application/json');
 		res.writeHead(200);
@@ -185,6 +193,49 @@ const handleOpenInEditor = async (
 				success: false,
 			}),
 		);
+	}
+};
+
+const handleAddAsset = ({
+	req,
+	res,
+	search,
+	publicDir,
+}: {
+	req: IncomingMessage;
+	res: ServerResponse;
+	search: string;
+	publicDir: string;
+}): void => {
+	try {
+		const query = new URLSearchParams(search);
+
+		const folder = query.get('folder');
+		if (typeof folder !== 'string') {
+			throw new Error('No `folder` provided');
+		}
+
+		const file = query.get('file');
+		if (typeof file !== 'string') {
+			throw new Error('No `file` provided');
+		}
+
+		const absolutePath = path.join(publicDir, folder, file);
+
+		const relativeToPublicDir = path.relative(publicDir, absolutePath);
+		if (relativeToPublicDir.startsWith('..')) {
+			throw new Error(`Not allowed to write to ${relativeToPublicDir}`);
+		}
+
+		fs.mkdirSync(path.dirname(absolutePath), {recursive: true});
+
+		req.pipe(createWriteStream(absolutePath));
+		req.on('end', () => {
+			res.end(JSON.stringify({success: true}));
+		});
+	} catch (err) {
+		res.statusCode = 500;
+		res.end(JSON.stringify({error: (err as Error).message}));
 	}
 };
 
@@ -252,6 +303,7 @@ export const handleRoutes = ({
 	numberOfAudioTags,
 	queueMethods: methods,
 	gitSource,
+	binariesDirectory,
 }: {
 	staticHash: string;
 	staticHashPrefix: string;
@@ -271,6 +323,7 @@ export const handleRoutes = ({
 	numberOfAudioTags: number;
 	queueMethods: QueueMethods;
 	gitSource: GitSource | null;
+	binariesDirectory: string | null;
 }) => {
 	const url = new URL(request.url as string, 'http://localhost');
 
@@ -288,7 +341,16 @@ export const handleRoutes = ({
 	}
 
 	if (url.pathname === '/api/open-in-editor') {
-		return handleOpenInEditor(remotionRoot, request, response);
+		return handleOpenInEditor(remotionRoot, request, response, logLevel);
+	}
+
+	if (url.pathname === '/api/add-asset') {
+		return handleAddAsset({
+			req: request,
+			res: response,
+			search: url.search,
+			publicDir,
+		});
 	}
 
 	for (const [key, value] of Object.entries(allApiRoutes)) {
@@ -304,6 +366,7 @@ export const handleRoutes = ({
 				response,
 				logLevel,
 				methods,
+				binariesDirectory,
 			});
 		}
 	}

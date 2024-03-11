@@ -12,7 +12,7 @@ import {useVideoConfig} from '../use-video-config.js';
 import {validateMediaProps} from '../validate-media-props.js';
 import {validateStartFromProps} from '../validate-start-from-props.js';
 import {DurationsContext} from '../video/duration-state.js';
-import {AudioForDevelopment} from './AudioForDevelopment.js';
+import {AudioForPreview} from './AudioForPreview.js';
 import {AudioForRendering} from './AudioForRendering.js';
 import type {RemotionAudioProps, RemotionMainAudioProps} from './props.js';
 import {SharedAudioContext} from './shared-audio-tags.js';
@@ -28,7 +28,15 @@ const AudioRefForwardingFunction: React.ForwardRefRenderFunction<
 		}
 > = (props, ref) => {
 	const audioContext = useContext(SharedAudioContext);
-	const {startFrom, endAt, name, stack, ...otherProps} = props;
+	const {
+		startFrom,
+		endAt,
+		name,
+		stack,
+		pauseWhenBuffering,
+		showInTimeline,
+		...otherProps
+	} = props;
 	const {loop, ...propsOtherThanLoop} = props;
 	const {fps} = useVideoConfig();
 	const environment = getRemotionEnvironment();
@@ -111,6 +119,7 @@ const AudioRefForwardingFunction: React.ForwardRefRenderFunction<
 			>
 				<Audio
 					_remotionInternalNeedsDurationCalculation={Boolean(loop)}
+					pauseWhenBuffering={pauseWhenBuffering ?? false}
 					{...otherProps}
 					ref={ref}
 				/>
@@ -133,7 +142,7 @@ const AudioRefForwardingFunction: React.ForwardRefRenderFunction<
 	}
 
 	return (
-		<AudioForDevelopment
+		<AudioForPreview
 			_remotionInternalNativeLoopPassed={
 				props._remotionInternalNativeLoopPassed ?? false
 			}
@@ -145,7 +154,10 @@ const AudioRefForwardingFunction: React.ForwardRefRenderFunction<
 			ref={ref}
 			onError={onError}
 			onDuration={onDuration}
+			// Proposal: Make this default to true in v5
+			pauseWhenBuffering={pauseWhenBuffering ?? false}
 			_remotionInternalNeedsDurationCalculation={Boolean(loop)}
+			showInTimeline={showInTimeline ?? true}
 		/>
 	);
 };

@@ -1,5 +1,5 @@
 import type {GitSource} from '@remotion/studio-shared';
-import {SOURCE_MAP_ENDPOINT} from '@remotion/studio-shared';
+import {getProjectName, SOURCE_MAP_ENDPOINT} from '@remotion/studio-shared';
 import fs, {promises} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -58,10 +58,14 @@ export const getConfig = ({
 	resolvedRemotionRoot,
 	onProgress,
 	options,
+	bufferStateDelayInMilliseconds,
+	maxTimelineTracks,
 }: {
 	outDir: string;
 	entryPoint: string;
 	resolvedRemotionRoot: string;
+	bufferStateDelayInMilliseconds: number | null;
+	maxTimelineTracks: number | null;
 	onProgress?: (progress: number) => void;
 	options?: LegacyBundleOptions;
 }) => {
@@ -75,9 +79,10 @@ export const getConfig = ({
 		webpackOverride: options?.webpackOverride ?? ((f) => f),
 		onProgress,
 		enableCaching: options?.enableCaching ?? true,
-		maxTimelineTracks: 90,
+		maxTimelineTracks,
 		remotionRoot: resolvedRemotionRoot,
 		keyboardShortcutsEnabled: true,
+		bufferStateDelayInMilliseconds,
 		poll: null,
 	});
 };
@@ -88,6 +93,8 @@ export type BundleOptions = {
 	ignoreRegisterRootWarning?: boolean;
 	onDirectoryCreated?: (dir: string) => void;
 	gitSource?: GitSource | null;
+	maxTimelineTracks?: number;
+	bufferStateDelayInMilliseconds?: number;
 } & LegacyBundleOptions;
 
 type Arguments =
@@ -185,12 +192,16 @@ export async function bundle(...args: Arguments): Promise<string> {
 	}
 
 	const {onProgress, ...options} = actualArgs;
-	const [, config] = getConfig({
+	const [, config] = await getConfig({
 		outDir,
 		entryPoint,
 		resolvedRemotionRoot,
 		onProgress,
 		options,
+		// Should be null to keep cache hash working
+		bufferStateDelayInMilliseconds:
+			actualArgs.bufferStateDelayInMilliseconds ?? null,
+		maxTimelineTracks: actualArgs.maxTimelineTracks ?? null,
 	});
 
 	const output = await promisified([config]);
@@ -273,6 +284,11 @@ export async function bundle(...args: Arguments): Promise<string> {
 		renderDefaults: undefined,
 		publicFolderExists: `${baseDir + (baseDir.endsWith('/') ? '' : '/')}public`,
 		gitSource: actualArgs.gitSource ?? null,
+		projectName: getProjectName({
+			gitSource: actualArgs.gitSource ?? null,
+			resolvedRemotionRoot,
+			basename: path.basename,
+		}),
 	});
 
 	fs.writeFileSync(path.join(outDir, 'index.html'), html);

@@ -177,7 +177,7 @@ export const articles = [
   {
     id: "cli",
     title: "Command line reference",
-    relativePath: "docs/cli/cli.md",
+    relativePath: "docs/cli/cli.mdx",
     compId: "articles-docs-cli-cli",
     crumb: null,
   },
@@ -861,6 +861,27 @@ export const articles = [
     crumb: "How To",
   },
   {
+    id: "install-whisper-cpp/download-whisper-model",
+    title: "downloadWhisperModel()",
+    relativePath: "docs/install-whisper-cpp/download-whisper-model.mdx",
+    compId: "articles-docs-install-whisper-cpp-download-whisper-model",
+    crumb: "@remotion/install-whisper-cpp",
+  },
+  {
+    id: "install-whisper-cpp/index",
+    title: "@remotion/install-whisper-cpp",
+    relativePath: "docs/install-whisper-cpp/index.mdx",
+    compId: "articles-docs-install-whisper-cpp-index",
+    crumb: "Transcribe audio locally",
+  },
+  {
+    id: "install-whisper-cpp/install-whisper-cpp",
+    title: "installWhisperCpp()",
+    relativePath: "docs/install-whisper-cpp/install-whisper-cpp.mdx",
+    compId: "articles-docs-install-whisper-cpp-install-whisper-cpp",
+    crumb: "@remotion/install-whisper-cpp",
+  },
+  {
     id: "interpolate-colors",
     title: "interpolateColors()",
     relativePath: "docs/interpolate-colors.md",
@@ -1003,7 +1024,7 @@ export const articles = [
   {
     id: "custom-destination",
     title: "Customizing Lambda output destination",
-    relativePath: "docs/lambda/custom-destination.md",
+    relativePath: "docs/lambda/custom-destination.mdx",
     compId: "articles-docs-lambda-custom-destination",
     crumb: "Lambda",
   },
@@ -1414,6 +1435,13 @@ export const articles = [
     crumb: null,
   },
   {
+    id: "layers",
+    title: "Layers",
+    relativePath: "docs/layers.mdx",
+    compId: "articles-docs-layers",
+    crumb: "Designing videos",
+  },
+  {
     id: "layout-utils/fill-text-box",
     title: "fillTextBox()",
     relativePath: "docs/layout-utils/fill-text-box.md",
@@ -1761,7 +1789,7 @@ export const articles = [
   {
     id: "offthreadvideo",
     title: "<OffthreadVideo>",
-    relativePath: "docs/offthreadvideo.md",
+    relativePath: "docs/offthreadvideo.mdx",
     compId: "articles-docs-offthreadvideo",
     crumb: "API",
   },
@@ -1782,7 +1810,7 @@ export const articles = [
   {
     id: "webpack",
     title: "Custom Webpack config",
-    relativePath: "docs/overwriting-webpack-config.md",
+    relativePath: "docs/overwriting-webpack-config.mdx",
     compId: "articles-docs-overwriting-webpack-config",
     crumb: "How To",
   },
@@ -1969,6 +1997,13 @@ export const articles = [
     crumb: "@remotion/player",
   },
   {
+    id: "buffer-state",
+    title: "The Player buffer state",
+    relativePath: "docs/player/buffer-state.mdx",
+    compId: "articles-docs-player-buffer-state",
+    crumb: "Best practices",
+  },
+  {
     id: "current-time",
     title: "Displaying the current time",
     relativePath: "docs/player/current-time.md",
@@ -2012,7 +2047,7 @@ export const articles = [
   },
   {
     id: "scaling",
-    title: "Scaling",
+    title: "Sizing",
     relativePath: "docs/player/scaling.md",
     compId: "articles-docs-player-scaling",
     crumb: "@remotion/player",
@@ -2853,13 +2888,13 @@ export const articles = [
   {
     id: "transparent-videos",
     title: "Transparent videos",
-    relativePath: "docs/transparent-videos.md",
+    relativePath: "docs/transparent-videos.mdx",
     compId: "articles-docs-transparent-videos",
     crumb: "Techniques",
   },
   {
     id: "troubleshooting/background-image",
-    title: "Flickering when using background-image",
+    title: "Flickering when using background-image or mask-image",
     relativePath: "docs/troubleshooting/background-image.md",
     compId: "articles-docs-troubleshooting-background-image",
     crumb: "Common mistakes",
@@ -2949,10 +2984,24 @@ export const articles = [
     crumb: "@remotion/media-utils",
   },
   {
+    id: "use-buffer-state",
+    title: "useBufferState()",
+    relativePath: "docs/use-buffer-state.md",
+    compId: "articles-docs-use-buffer-state",
+    crumb: "API",
+  },
+  {
     id: "use-current-frame",
     title: "useCurrentFrame()",
     relativePath: "docs/use-current-frame.md",
     compId: "articles-docs-use-current-frame",
+    crumb: "API",
+  },
+  {
+    id: "use-current-scale",
+    title: "useCurrentScale()",
+    relativePath: "docs/use-current-scale.mdx",
+    compId: "articles-docs-use-current-scale",
     crumb: "API",
   },
   {

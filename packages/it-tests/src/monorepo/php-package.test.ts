@@ -103,6 +103,7 @@ test("PHP package should create the same renderMedia payload as normal Lambda pa
     encodingBufferSize: null,
     webhook: null,
     x264Preset: null,
+    preferLossless: false,
   });
   const jsonOutput = toParse.substring(0, toParse.lastIndexOf("}") + 1);
   const parsedJson = JSON.parse(jsonOutput);
@@ -115,6 +116,8 @@ test("PHP package should create the same renderMedia payload as normal Lambda pa
   ).toEqual(removeUndefined(nativeVersion));
 });
 
+// Skip PHP tests temporarily
+// https://github.com/shivammathur/setup-php/issues/823
 test("PHP package should create the same progress payload as normal Lambda package", async () => {
   execSync("php composer.phar --quiet update", {
     cwd: path.join(process.cwd(), "..", "lambda-php"),
@@ -132,6 +135,7 @@ test("PHP package should create the same progress payload as normal Lambda packa
     functionName: "remotion-render",
     bucketName: "remotion-render",
     renderId: "abcdef",
+    logLevel: "info",
   });
   const jsonOutput = toParse.substring(0, toParse.lastIndexOf("}") + 1);
   const parsedJson = JSON.parse(jsonOutput);
