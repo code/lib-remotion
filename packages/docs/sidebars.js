@@ -738,6 +738,7 @@ module.exports = {
 				'player/preloading',
 				'player/premounting',
 				'player/best-practices',
+				'player/custom-controls',
 			],
 		},
 
@@ -844,6 +845,7 @@ module.exports = {
 				'video-uploads',
 				'presigned-urls',
 				'font-picker',
+				'building-a-timeline',
 				'multiple-fps',
 			],
 		},

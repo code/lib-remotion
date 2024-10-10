@@ -868,6 +868,13 @@ export const articles = [
 		crumb: 'API',
 	},
 	{
+		id: 'building-a-timeline',
+		title: 'Build a timeline-based video editor',
+		relativePath: 'docs/building-a-timeline.mdx',
+		compId: 'articles-docs-building-a-timeline',
+		crumb: 'Building video apps',
+	},
+	{
 		id: 'offthreadvideo',
 		title: '<OffthreadVideo>',
 		relativePath: 'docs/offthreadvideo.mdx',
@@ -3722,6 +3729,13 @@ export const articles = [
 		relativePath: 'docs/static-file-remote-urls.mdx',
 		compId: 'articles-docs-static-file-remote-urls',
 		crumb: 'Troubleshooting',
+	},
+	{
+		id: 'custom-controls',
+		title: 'Custom controls for the Player',
+		relativePath: 'docs/player/custom-controls.mdx',
+		compId: 'articles-docs-player-custom-controls',
+		crumb: '@remotion/player',
 	},
 	{
 		id: 'player/index',
