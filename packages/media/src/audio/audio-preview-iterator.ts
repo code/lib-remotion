@@ -3,6 +3,7 @@ import {Internals} from 'remotion';
 import {roundTo4Digits} from '../helpers/round-to-4-digits';
 import type {PrewarmedAudioIteratorCache} from '../prewarm-iterator-for-looping';
 import {ALLOWED_GLOBAL_TIME_ANCHOR_SHIFT} from '../set-global-time-anchor';
+import type {SharedAudioContextForMediaPlayer} from '../shared-audio-context-for-media-player';
 
 export const HEALTHY_BUFFER_THRESHOLD_SECONDS = 1;
 
@@ -12,6 +13,7 @@ export type QueuedNode = {
 	buffer: AudioBuffer;
 	scheduledTime: number;
 	playbackRate: number;
+	scheduledAtAnchor: number;
 };
 
 export type QueuedPeriod = {
@@ -19,12 +21,17 @@ export type QueuedPeriod = {
 	until: number;
 };
 
-export const makeAudioIterator = (
-	startFromSecond: number,
-	maximumTimestamp: number,
-	cache: PrewarmedAudioIteratorCache,
-	debugAudioScheduling: boolean,
-) => {
+export const makeAudioIterator = ({
+	startFromSecond,
+	maximumTimestamp,
+	cache,
+	debugAudioScheduling,
+}: {
+	startFromSecond: number;
+	maximumTimestamp: number;
+	cache: PrewarmedAudioIteratorCache;
+	debugAudioScheduling: boolean;
+}) => {
 	let destroyed = false;
 	const iterator = cache.makeIteratorOrUsePrewarmed(
 		startFromSecond,
@@ -39,27 +46,34 @@ export const makeAudioIterator = (
 	let pendingNext: Promise<IteratorResult<WrappedAudioBuffer, void>> | null =
 		null;
 
-	const cleanupAudioQueue = (audioContext: AudioContext) => {
+	const cleanupAudioQueue = (
+		audioContext: SharedAudioContextForMediaPlayer,
+	) => {
 		for (const node of queuedAudioNodes) {
 			try {
-				const currentlyHearing = audioContext.getOutputTimestamp().contextTime!;
-				const nodeEndTime =
-					node.scheduledTime + node.buffer.duration / node.playbackRate;
-
+				// When we unmount at the end of playback, we might not yet be done with audio anchors
+				// we should not stop the nodes
 				const isAlreadyPlaying =
 					node.scheduledTime - ALLOWED_GLOBAL_TIME_ANCHOR_SHIFT <
-					audioContext.currentTime;
+					audioContext.audioContext.currentTime;
 
-				const shouldKeep = isAlreadyPlaying;
+				// except for when the audio anchor changed (e.g. through a seek)
+				const wasScheduledForThisAnchor =
+					node.scheduledAtAnchor === audioContext.audioSyncAnchor.value;
 
-				if (shouldKeep) {
+				if (isAlreadyPlaying && wasScheduledForThisAnchor) {
 					continue;
 				}
 
 				if (debugAudioScheduling) {
+					const currentlyHearing =
+						audioContext.audioContext.getOutputTimestamp().contextTime!;
+					const nodeEndTime =
+						node.scheduledTime + node.buffer.duration / node.playbackRate;
+
 					Internals.Log.info(
 						{logLevel: 'trace', tag: 'audio-scheduling'},
-						`Stopping node ${node.timestamp.toFixed(3)}, currently hearing = ${currentlyHearing.toFixed(3)} currentTime = ${audioContext.currentTime.toFixed(3)} nodeEndTime = ${nodeEndTime.toFixed(3)} scheduledTime = ${node.scheduledTime.toFixed(3)}`,
+						`Stopping node ${node.timestamp.toFixed(3)}, currently hearing = ${currentlyHearing.toFixed(3)} currentTime = ${audioContext.audioContext.currentTime.toFixed(3)} nodeEndTime = ${nodeEndTime.toFixed(3)} scheduledTime = ${node.scheduledTime.toFixed(3)}`,
 					);
 				}
 
@@ -259,7 +273,7 @@ export const makeAudioIterator = (
 	};
 
 	return {
-		destroy: (audioContext: AudioContext) => {
+		destroy: (audioContext: SharedAudioContextForMediaPlayer) => {
 			cleanupAudioQueue(audioContext);
 			destroyed = true;
 			iterator.return().catch(() => undefined);
@@ -286,12 +300,14 @@ export const makeAudioIterator = (
 			buffer,
 			scheduledTime,
 			playbackRate,
+			scheduledAtAnchor,
 		}: {
 			node: AudioBufferSourceNode;
 			timestamp: number;
 			buffer: AudioBuffer;
 			scheduledTime: number;
 			playbackRate: number;
+			scheduledAtAnchor: number;
 		}) => {
 			queuedAudioNodes.push({
 				node,
@@ -299,6 +315,7 @@ export const makeAudioIterator = (
 				buffer,
 				scheduledTime,
 				playbackRate,
+				scheduledAtAnchor,
 			});
 		},
 		removeQueuedAudioNode: (node: AudioBufferSourceNode) => {
