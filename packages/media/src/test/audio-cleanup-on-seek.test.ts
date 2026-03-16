@@ -1,4 +1,4 @@
-import {ALL_FORMATS, Input, UrlSource} from 'mediabunny';
+import {ALL_FORMATS, AudioBufferSink, Input, UrlSource} from 'mediabunny';
 import {expect, test} from 'vitest';
 import {makeAudioIterator} from '../audio/audio-preview-iterator';
 import {makePrewarmedAudioIteratorCache} from '../prewarm-iterator-for-looping';
@@ -14,7 +14,8 @@ const makeCache = async () => {
 		throw new Error('No audio track found');
 	}
 
-	const {audioBufferSink} = audioTrack;
+	const audioBufferSink = new AudioBufferSink(audioTrack);
+
 	return makePrewarmedAudioIteratorCache(audioBufferSink);
 };
 
@@ -36,6 +37,23 @@ const makeMockBuffer = (duration: number) => {
 	return {
 		duration,
 	} as unknown as AudioBuffer;
+};
+
+const makeMockSharedAudioContext = ({
+	currentTime,
+	anchorValue,
+}: {
+	currentTime: number;
+	anchorValue: number;
+}): SharedAudioContextForMediaPlayer => {
+	return {
+		audioContext: {
+			currentTime,
+			getOutputTimestamp: () => ({contextTime: currentTime}),
+		} as unknown as AudioContext,
+		audioSyncAnchor: {value: anchorValue},
+		scheduleAudioNode: () => ({type: 'started', scheduledTime: 0}),
+	};
 };
 
 test('destroy should NOT stop nodes that are already playing with the same anchor', async () => {
@@ -64,16 +82,9 @@ test('destroy should NOT stop nodes that are already playing with the same ancho
 	});
 
 	// Destroy with same anchor (0) and currentTime well past scheduledTime
-	const sharedAudioContext: SharedAudioContextForMediaPlayer = {
-		audioContext: {
-			currentTime: 1.0,
-			getOutputTimestamp: () => ({contextTime: 1.0}),
-		} as unknown as AudioContext,
-		audioSyncAnchor: {value: 0},
-		scheduleAudioNode: () => ({type: 'started', scheduledTime: 0}),
-	};
-
-	iterator.destroy(sharedAudioContext);
+	iterator.destroy(
+		makeMockSharedAudioContext({currentTime: 1.0, anchorValue: 0}),
+	);
 
 	// Nodes should NOT have been stopped because they are already playing
 	// and were scheduled for the current anchor
@@ -109,16 +120,9 @@ test('destroy should stop nodes when the audio anchor changed (seek to different
 	// Destroy with a DIFFERENT anchor (simulating a seek happened)
 	// Even though nodes are "already playing" (currentTime > scheduledTime),
 	// they should be stopped because the anchor changed
-	const sharedAudioContext: SharedAudioContextForMediaPlayer = {
-		audioContext: {
-			currentTime: 1.0,
-			getOutputTimestamp: () => ({contextTime: 1.0}),
-		} as unknown as AudioContext,
-		audioSyncAnchor: {value: 1}, // different anchor!
-		scheduleAudioNode: () => ({type: 'started', scheduledTime: 0}),
-	};
-
-	iterator.destroy(sharedAudioContext);
+	iterator.destroy(
+		makeMockSharedAudioContext({currentTime: 1.0, anchorValue: 1}),
+	);
 
 	// Nodes SHOULD be stopped because the anchor changed (seek happened)
 	expect(mock1.wasStopped()).toBe(true);
