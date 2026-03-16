@@ -24,6 +24,7 @@ import {renderVideo} from "./render-video";
 let mainWindow: BrowserWindow | null = null;
 let activeRender: Promise<RenderResult> | null = null;
 const integrationRenderOutputPath = getIntegrationRenderOutputPath();
+let currentWindowProgressBarValue = -1;
 
 if (app.isPackaged) {
   process.chdir(app.getPath("userData"));
@@ -31,6 +32,20 @@ if (app.isPackaged) {
 
 const sendRenderUpdate = (update: RenderUpdate) => {
   mainWindow?.webContents.send(RENDER_PROGRESS_CHANNEL, update);
+
+  if (update.type === "progress") {
+    const normalizedProgress = Math.max(
+      0,
+      Math.min(1, update.progress / 100 || 0),
+    );
+    currentWindowProgressBarValue = normalizedProgress;
+    mainWindow?.setProgressBar(currentWindowProgressBarValue);
+  }
+};
+
+const setWindowProgressBar = (progress: number) => {
+  currentWindowProgressBarValue = progress;
+  mainWindow?.setProgressBar(currentWindowProgressBarValue);
 };
 
 const assertTrustedSender = (event: IpcMainInvokeEvent) => {
@@ -52,6 +67,7 @@ const createWindow = () => {
   mainWindow.webContents.setWindowOpenHandler(() => {
     return {action: "deny"};
   });
+  mainWindow.setProgressBar(currentWindowProgressBarValue);
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
@@ -106,6 +122,7 @@ ipcMain.handle(RENDER_VIDEO_CHANNEL, async (event, input: RenderRequest) => {
     throw new Error("Output path must be absolute.");
   }
 
+  setWindowProgressBar(2);
   activeRender = renderVideo({
     isPackaged: app.isPackaged,
     outputPath: input.outputPath,
@@ -130,6 +147,7 @@ ipcMain.handle(RENDER_VIDEO_CHANNEL, async (event, input: RenderRequest) => {
     });
     throw error;
   } finally {
+    setWindowProgressBar(-1);
     activeRender = null;
   }
 });
