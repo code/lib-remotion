@@ -1,4 +1,5 @@
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
+import {RENDER_CANCELLED_MESSAGE} from "./electron-api";
 
 function getProgressLabel(stage: "browser-download" | "bundling" | "rendering") {
   switch (stage) {
@@ -117,17 +118,39 @@ function getStatusClasses(statusState: StatusState) {
   }
 }
 
+function isFinalStatusMessage(message: string) {
+  return (
+    message === RENDER_CANCELLED_MESSAGE ||
+    message.startsWith("Render failed:") ||
+    message.startsWith("Render complete:")
+  );
+}
+
 export const App: React.FC = () => {
   const [titleText, setTitleText] = useState("Hello from Electron");
   const [status, setStatus] = useState("Ready to render.");
   const [result, setResult] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [hasStartedRender, setHasStartedRender] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const isCancellingRef = useRef(false);
+
+  useEffect(() => {
+    isCancellingRef.current = isCancelling;
+  }, [isCancelling]);
 
   useEffect(() => {
     return window.remotionElectron.onRenderUpdate((update) => {
       if (update.type === "status") {
+        if (isCancellingRef.current && !isFinalStatusMessage(update.message)) {
+          return;
+        }
+
         setStatus(update.message);
+        return;
+      }
+
+      if (isCancellingRef.current) {
         return;
       }
 
@@ -136,9 +159,10 @@ export const App: React.FC = () => {
     });
   }, []);
 
-  const onRender = async () => {
+  async function onRender() {
     setHasStartedRender(true);
     setIsBusy(true);
+    setIsCancelling(false);
     setResult(null);
 
     try {
@@ -151,13 +175,20 @@ export const App: React.FC = () => {
       }
 
       setStatus("Preparing render...");
-      const {outputPath} = await window.remotionElectron.renderVideo({
+      const renderResult = await window.remotionElectron.renderVideo({
         titleText,
         outputPath: saveDialog.outputPath,
       });
 
+      if (renderResult.cancelled) {
+        setStatus(RENDER_CANCELLED_MESSAGE);
+        return;
+      }
+
       setStatus("Render complete.");
-      setResult(`Saved to ${outputPath} and revealed in your file manager.`);
+      setResult(
+        `Saved to ${renderResult.outputPath} and revealed in your file manager.`,
+      );
     } catch (error) {
       const message =
         error instanceof Error
@@ -165,9 +196,29 @@ export const App: React.FC = () => {
           : "Rendering failed for an unknown reason.";
       setStatus(`Render failed: ${message}`);
     } finally {
+      setIsCancelling(false);
       setIsBusy(false);
     }
-  };
+  }
+
+  async function onCancel() {
+    setIsCancelling(true);
+    setStatus("Cancelling render...");
+
+    try {
+      const result = await window.remotionElectron.cancelRender();
+      if (!result.didCancel) {
+        setStatus(RENDER_CANCELLED_MESSAGE);
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to cancel render.";
+      setStatus(`Render failed: ${message}`);
+      setIsBusy(false);
+    } finally {
+      setIsCancelling(false);
+    }
+  }
 
   const statusState = getStatusState({isBusy, result, status});
   const statusLabel = getStatusLabel(statusState);
@@ -209,15 +260,25 @@ export const App: React.FC = () => {
               />
             </div>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="w-full sm:w-[220px]">
+              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
                 {isBusy ? (
-                  <div
-                    className={`flex min-h-10 w-full items-center border px-3 py-2 ${statusClasses.panel}`}
-                  >
-                    <p className="truncate text-[14px] leading-6 text-app-text">
-                      {statusDetail}
-                    </p>
-                  </div>
+                  <>
+                    <div
+                      className={`flex min-h-10 flex-1 items-center border px-3 py-2 ${statusClasses.panel}`}
+                    >
+                      <p className="truncate text-[14px] leading-6 text-app-text">
+                        {statusDetail}
+                      </p>
+                    </div>
+                    <button
+                      className="inline-flex min-h-8 items-center justify-center border border-white/15 bg-white/5 px-3 py-1.5 text-[13px] font-semibold text-white hover:border-white/25 hover:bg-white/10 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/5 disabled:text-slate-400"
+                      type="button"
+                      onClick={onCancel}
+                      disabled={isCancelling}
+                    >
+                      {isCancelling ? "Cancelling..." : "Cancel render"}
+                    </button>
+                  </>
                 ) : (
                   <button
                     className="inline-flex min-h-8 items-center justify-center border border-brand/70 bg-brand px-3 py-1.5 text-[13px] font-semibold text-white hover:border-brand-bright hover:bg-brand-bright disabled:cursor-not-allowed disabled:border-brand/35 disabled:bg-brand-muted"

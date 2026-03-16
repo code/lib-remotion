@@ -27,7 +27,7 @@ npm install
 npm run dev
 ```
 
-Type a title, then click the export button in the app window. The app will ask where to save the video before rendering, and the app icon shows render progress at the OS level while work is ongoing.
+Type a title, then click the export button in the app window. The app will ask where to save the video before rendering, show progress on the app icon while work is ongoing, and let you cancel an in-progress render from the UI.
 
 In development, the Remotion project is bundled on each render so composition changes are always picked up. The first render may also download Chrome Headless Shell if no compatible local browser is installed yet.
 

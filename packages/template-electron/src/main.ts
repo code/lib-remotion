@@ -6,8 +6,11 @@ import {
   shell,
   type IpcMainInvokeEvent,
 } from "electron";
+import {makeCancelSignal} from "@remotion/renderer";
 import path from "node:path";
 import {
+  CANCEL_RENDER_CHANNEL,
+  RENDER_CANCELLED_MESSAGE,
   RENDER_PROGRESS_CHANNEL,
   RENDER_VIDEO_CHANNEL,
   SELECT_RENDER_OUTPUT_CHANNEL,
@@ -25,36 +28,33 @@ let mainWindow: BrowserWindow | null = null;
 let activeRender: Promise<RenderResult> | null = null;
 const integrationRenderOutputPath = getIntegrationRenderOutputPath();
 let currentWindowProgressBarValue = -1;
+let cancelActiveRender: (() => void) | null = null;
+const INDETERMINATE_PROGRESS_BAR = 2;
 
 if (app.isPackaged) {
   process.chdir(app.getPath("userData"));
 }
 
-const sendRenderUpdate = (update: RenderUpdate) => {
+function sendRenderUpdate(update: RenderUpdate): void {
   mainWindow?.webContents.send(RENDER_PROGRESS_CHANNEL, update);
 
   if (update.type === "progress") {
-    const normalizedProgress = Math.max(
-      0,
-      Math.min(1, update.progress / 100 || 0),
-    );
-    currentWindowProgressBarValue = normalizedProgress;
-    mainWindow?.setProgressBar(currentWindowProgressBarValue);
+    setWindowProgressBar(Math.max(0, Math.min(1, update.progress / 100 || 0)));
   }
-};
+}
 
-const setWindowProgressBar = (progress: number) => {
+function setWindowProgressBar(progress: number): void {
   currentWindowProgressBarValue = progress;
   mainWindow?.setProgressBar(currentWindowProgressBarValue);
-};
+}
 
-const assertTrustedSender = (event: IpcMainInvokeEvent) => {
+function assertTrustedSender(event: IpcMainInvokeEvent): void {
   if (!mainWindow || event.sender.id !== mainWindow.webContents.id) {
     throw new Error("Blocked IPC call from an unknown renderer.");
   }
-};
+}
 
-const createWindow = () => {
+function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 960,
     height: 760,
@@ -76,7 +76,7 @@ const createWindow = () => {
       path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
     );
   }
-};
+}
 
 ipcMain.handle(SELECT_RENDER_OUTPUT_CHANNEL, async (event) => {
   assertTrustedSender(event);
@@ -122,17 +122,28 @@ ipcMain.handle(RENDER_VIDEO_CHANNEL, async (event, input: RenderRequest) => {
     throw new Error("Output path must be absolute.");
   }
 
-  setWindowProgressBar(2);
+  setWindowProgressBar(INDETERMINATE_PROGRESS_BAR);
+  const {cancel, cancelSignal} = makeCancelSignal();
+  cancelActiveRender = cancel;
   activeRender = renderVideo({
     isPackaged: app.isPackaged,
     outputPath: input.outputPath,
     projectRoot: app.getAppPath(),
     titleText: input.titleText,
     onUpdate: sendRenderUpdate,
+    cancelSignal,
   });
 
   try {
     const result = await activeRender;
+    if (result.cancelled) {
+      sendRenderUpdate({
+        type: "status",
+        message: RENDER_CANCELLED_MESSAGE,
+      });
+      return result;
+    }
+
     shell.showItemInFolder(result.outputPath);
     sendRenderUpdate({
       type: "status",
@@ -148,8 +159,20 @@ ipcMain.handle(RENDER_VIDEO_CHANNEL, async (event, input: RenderRequest) => {
     throw error;
   } finally {
     setWindowProgressBar(-1);
+    cancelActiveRender = null;
     activeRender = null;
   }
+});
+
+ipcMain.handle(CANCEL_RENDER_CHANNEL, async (event) => {
+  assertTrustedSender(event);
+
+  if (!activeRender || !cancelActiveRender) {
+    return {didCancel: false};
+  }
+
+  cancelActiveRender();
+  return {didCancel: true};
 });
 
 app.on("ready", () => {

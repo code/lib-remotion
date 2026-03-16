@@ -1,8 +1,10 @@
 import {contextBridge, ipcRenderer} from "electron";
 import {
+  CANCEL_RENDER_CHANNEL,
   RENDER_PROGRESS_CHANNEL,
   RENDER_VIDEO_CHANNEL,
   SELECT_RENDER_OUTPUT_CHANNEL,
+  type CancelRenderResult,
   type RemotionElectronApi,
   type RenderResult,
   type RenderUpdate,
@@ -14,6 +16,9 @@ const api: RemotionElectronApi = {
   },
   renderVideo: (input) => {
     return ipcRenderer.invoke(RENDER_VIDEO_CHANNEL, input) as Promise<RenderResult>;
+  },
+  cancelRender: () => {
+    return ipcRenderer.invoke(CANCEL_RENDER_CHANNEL) as Promise<CancelRenderResult>;
   },
   onRenderUpdate: (listener) => {
     const handler = (_event: Electron.IpcRendererEvent, update: RenderUpdate) => {

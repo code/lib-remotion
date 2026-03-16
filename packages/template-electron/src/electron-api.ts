@@ -1,19 +1,31 @@
 export const RENDER_VIDEO_CHANNEL = "remotion-electron:render-video";
 export const RENDER_PROGRESS_CHANNEL = "remotion-electron:render-progress";
 export const SELECT_RENDER_OUTPUT_CHANNEL = "remotion-electron:select-render-output";
+export const CANCEL_RENDER_CHANNEL = "remotion-electron:cancel-render";
+export const RENDER_CANCELLED_MESSAGE = "Render cancelled.";
 
 export type RenderRequest = {
   titleText: string;
   outputPath: string;
 };
 
-export type RenderResult = {
-  outputPath: string;
-};
+export type RenderResult =
+  | {
+      cancelled: false;
+      outputPath: string;
+    }
+  | {
+      cancelled: true;
+      outputPath: null;
+    };
 
 export type SaveDialogResult = {
   canceled: boolean;
   outputPath: string | null;
+};
+
+export type CancelRenderResult = {
+  didCancel: boolean;
 };
 
 export type RenderUpdate =
@@ -30,6 +42,7 @@ export type RenderUpdate =
 export type RemotionElectronApi = {
   selectRenderOutput: () => Promise<SaveDialogResult>;
   renderVideo: (input: RenderRequest) => Promise<RenderResult>;
+  cancelRender: () => Promise<CancelRenderResult>;
   onRenderUpdate: (listener: (update: RenderUpdate) => void) => () => void;
 };
 

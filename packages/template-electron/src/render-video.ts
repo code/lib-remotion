@@ -1,6 +1,16 @@
-import {ensureBrowser, renderMedia, selectComposition} from "@remotion/renderer";
+import {
+  type CancelSignal,
+  ensureBrowser,
+  renderMedia,
+  selectComposition,
+} from "@remotion/renderer";
+import {rm} from "node:fs/promises";
 import path from "node:path";
-import type {RenderResult, RenderUpdate} from "./electron-api";
+import {
+  RENDER_CANCELLED_MESSAGE,
+  type RenderResult,
+  type RenderUpdate,
+} from "./electron-api";
 import {getCompositorPackage} from "./compositor-package";
 import {
   bundleRemotionProject,
@@ -10,13 +20,17 @@ import {
 
 const compositionId = "HelloWorld";
 
-const getBinariesDirectory = ({
+function isRenderCancelledError(error: unknown): boolean {
+  return error instanceof Error && error.message === RENDER_CANCELLED_MESSAGE;
+}
+
+function getBinariesDirectory({
   isPackaged,
   projectRoot,
 }: {
   isPackaged: boolean;
   projectRoot: string;
-}) => {
+}): string | null {
   if (!isPackaged) {
     return null;
   }
@@ -32,9 +46,9 @@ const getBinariesDirectory = ({
     "node_modules",
     compositorPackage,
   );
-};
+}
 
-const getServeUrl = async ({
+async function getServeUrl({
   isPackaged,
   projectRoot,
   onUpdate,
@@ -42,7 +56,7 @@ const getServeUrl = async ({
   isPackaged: boolean;
   projectRoot: string;
   onUpdate?: (update: RenderUpdate) => void;
-}) => {
+}): Promise<string> {
   if (isPackaged) {
     if (!hasPrebuiltRemotionBundle(projectRoot)) {
       throw new Error(
@@ -67,7 +81,7 @@ const getServeUrl = async ({
     projectRoot,
     onUpdate,
   });
-};
+}
 
 export const renderVideo = async ({
   isPackaged,
@@ -75,80 +89,127 @@ export const renderVideo = async ({
   projectRoot,
   titleText,
   onUpdate,
+  cancelSignal,
 }: {
   isPackaged: boolean;
   outputPath: string;
   projectRoot: string;
   titleText: string;
   onUpdate?: (update: RenderUpdate) => void;
+  cancelSignal?: CancelSignal;
 }): Promise<RenderResult> => {
-  onUpdate?.({
-    type: "status",
-    message: "Checking browser installation...",
-  });
-  await ensureBrowser({
-    onBrowserDownload: ({chromeMode}) => {
-      const browserName =
-        chromeMode === "chrome-for-testing" ? "Chrome" : "Chrome Headless Shell";
+  let wasCancelled = false;
 
-      onUpdate?.({
-        type: "status",
-        message: `Downloading ${browserName}...`,
-      });
+  async function finishCancelledRender(): Promise<RenderResult> {
+    await rm(outputPath, {force: true});
+    return {
+      cancelled: true as const,
+      outputPath: null,
+    };
+  }
 
-      return {
-        version: null,
-        onProgress: (progress) => {
-          onUpdate?.({
-            type: "progress",
-            stage: "browser-download",
-            progress: progress.percent,
-          });
-        },
-      };
-    },
+  cancelSignal?.(() => {
+    wasCancelled = true;
   });
 
-  const serveUrl = await getServeUrl({
-    isPackaged,
-    projectRoot,
-    onUpdate,
-  });
-  const binariesDirectory = getBinariesDirectory({
-    isPackaged,
-    projectRoot,
-  });
-  const inputProps = {
-    titleText: titleText.trim() || "Hello from Electron",
-  };
+  try {
+    onUpdate?.({
+      type: "status",
+      message: "Checking browser installation...",
+    });
 
-  const composition = await selectComposition({
-    serveUrl,
-    id: compositionId,
-    inputProps,
-    binariesDirectory,
-  });
+    await ensureBrowser({
+      onBrowserDownload: ({chromeMode}) => {
+        const browserName =
+          chromeMode === "chrome-for-testing" ? "Chrome" : "Chrome Headless Shell";
 
-  onUpdate?.({
-    type: "status",
-    message: "Rendering video...",
-  });
+        onUpdate?.({
+          type: "status",
+          message: `Downloading ${browserName}...`,
+        });
 
-  await renderMedia({
-    composition,
-    serveUrl,
-    codec: "h264",
-    outputLocation: outputPath,
-    inputProps,
-    binariesDirectory,
-    onProgress(progress) {
-      onUpdate?.({
-        type: "progress",
-        stage: "rendering",
-        progress: progress.progress * 100,
-      });
-    },
-  });
+        return {
+          version: null,
+          onProgress: (progress) => {
+            onUpdate?.({
+              type: "progress",
+              stage: "browser-download",
+              progress: progress.percent,
+            });
+          },
+        };
+      },
+    });
 
-  return {outputPath};
+    if (wasCancelled) {
+      return finishCancelledRender();
+    }
+
+    const serveUrl = await getServeUrl({
+      isPackaged,
+      projectRoot,
+      onUpdate,
+    });
+
+    if (wasCancelled) {
+      return finishCancelledRender();
+    }
+
+    const binariesDirectory = getBinariesDirectory({
+      isPackaged,
+      projectRoot,
+    });
+
+    const inputProps = {
+      titleText: titleText.trim() || "Hello from Electron",
+    };
+
+    const composition = await selectComposition({
+      serveUrl,
+      id: compositionId,
+      inputProps,
+      binariesDirectory,
+    });
+
+    if (wasCancelled) {
+      return finishCancelledRender();
+    }
+
+    onUpdate?.({
+      type: "status",
+      message: "Rendering video...",
+    });
+
+    await renderMedia({
+      composition,
+      serveUrl,
+      codec: "h264",
+      outputLocation: outputPath,
+      inputProps,
+      binariesDirectory,
+      cancelSignal,
+      onProgress(progress) {
+        onUpdate?.({
+          type: "progress",
+          stage: "rendering",
+          progress: progress.progress * 100,
+        });
+      },
+    });
+
+    if (wasCancelled) {
+      return finishCancelledRender();
+    }
+
+    return {
+      cancelled: false,
+      outputPath,
+    }
+  } catch (error) {
+    if (wasCancelled || isRenderCancelledError(error)) {
+      return finishCancelledRender();
+    }
+
+    throw error;
+  }
 };
