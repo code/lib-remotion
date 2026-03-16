@@ -58,7 +58,12 @@ const makeMockSharedAudioContext = ({
 
 test('destroy should NOT stop nodes that are already playing with the same anchor', async () => {
 	const cache = await makeCache();
-	const iterator = makeAudioIterator(0, Infinity, cache, false);
+	const iterator = makeAudioIterator({
+		startFromSecond: 0,
+		maximumTimestamp: Infinity,
+		cache,
+		debugAudioScheduling: false,
+	});
 
 	const mock1 = makeMockNode();
 	const mock2 = makeMockNode();
@@ -94,7 +99,12 @@ test('destroy should NOT stop nodes that are already playing with the same ancho
 
 test('destroy should stop nodes when the audio anchor changed (seek to different position)', async () => {
 	const cache = await makeCache();
-	const iterator = makeAudioIterator(0, Infinity, cache, false);
+	const iterator = makeAudioIterator({
+		startFromSecond: 0,
+		maximumTimestamp: Infinity,
+		cache,
+		debugAudioScheduling: false,
+	});
 
 	const mock1 = makeMockNode();
 	const mock2 = makeMockNode();

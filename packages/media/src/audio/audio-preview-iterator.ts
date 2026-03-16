@@ -21,12 +21,17 @@ export type QueuedPeriod = {
 	until: number;
 };
 
-export const makeAudioIterator = (
-	startFromSecond: number,
-	maximumTimestamp: number,
-	cache: PrewarmedAudioIteratorCache,
-	debugAudioScheduling: boolean,
-) => {
+export const makeAudioIterator = ({
+	startFromSecond,
+	maximumTimestamp,
+	cache,
+	debugAudioScheduling,
+}: {
+	startFromSecond: number;
+	maximumTimestamp: number;
+	cache: PrewarmedAudioIteratorCache;
+	debugAudioScheduling: boolean;
+}) => {
 	let destroyed = false;
 	const iterator = cache.makeIteratorOrUsePrewarmed(
 		startFromSecond,

@@ -239,12 +239,12 @@ export const audioIteratorManager = ({
 		using delayHandle = delayPlaybackHandleIfNotPremounting();
 		currentDelayHandle = delayHandle;
 
-		const iterator = makeAudioIterator(
+		const iterator = makeAudioIterator({
 			startFromSecond,
-			getEndTime(),
-			prewarmedAudioIteratorCache,
+			maximumTimestamp: getEndTime(),
+			cache: prewarmedAudioIteratorCache,
 			debugAudioScheduling,
-		);
+		});
 		audioIteratorsCreated++;
 		audioBufferIterator = iterator;
 
