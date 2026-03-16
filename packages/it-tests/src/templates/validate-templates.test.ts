@@ -4,6 +4,9 @@ import path from 'node:path';
 import {CreateVideoInternals, Template} from 'create-video';
 
 const {FEATURED_TEMPLATES} = CreateVideoInternals;
+const normalizeEol = (contents: string) => {
+	return contents.replaceAll('\r\n', '\n');
+};
 
 const getFileForTemplate = (template: Template, file: string) => {
 	return path.join(process.cwd(), '..', template.templateInMonorepo, file);
@@ -285,7 +288,11 @@ describe('Templates should be valid', () => {
 			const {contents} = await findFile([
 				getFileForTemplate(template, '.prettierrc'),
 			]);
-			expect(contents).toBe(`{
+			expect(contents).toBeTruthy();
+			if (!contents) {
+				throw new Error('Expected .prettierrc to exist');
+			}
+			expect(normalizeEol(contents)).toBe(`{
   "useTabs": false,
   "bracketSpacing": true,
   "tabWidth": 2
