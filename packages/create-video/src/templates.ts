@@ -237,7 +237,7 @@ export const FEATURED_TEMPLATES: Template[] = [
 		shortName: 'Prompt to Motion Graphics SaaS Starter Kit',
 		org: 'remotion-dev',
 		repoName: 'template-prompt-to-motion-graphics-saas',
-		description: 'SaaS template for AI-powered code generation with Remotion',
+		description: 'SaaS template for AI-powered animation generation',
 		longerDescription:
 			'A SaaS template for "Prompt to Motion Graphics" products. Generates Remotion code, streams it to the frontend, and compiles and previews it in the browser. See the <a href="/docs/ai/ai-saas-template">documentation page</a> for more details.',
 		promoBanner: {
