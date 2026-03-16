@@ -9,7 +9,9 @@
   </a>
 </p>
 
-This template uses Electron Forge, Vite, and TypeScript to launch a minimal Electron app that renders a Remotion composition from the Electron main process.
+This template uses Electron Forge, Vite, TypeScript, and Tailwind CSS to launch a minimal Electron app that renders a Remotion composition from the Electron main process.
+
+The Electron window UI lives in `src/App.tsx` and is styled with Tailwind in `src/index.css`.
 
 ## Commands
 
@@ -25,7 +27,7 @@ npm install
 npm run dev
 ```
 
-Type a title, then click the render button in the app window. The app will ask where to save the video before rendering.
+Type a title, then click the export button in the app window. The app will ask where to save the video before rendering.
 
 In development, the Remotion project is bundled on each render so composition changes are always picked up. The first render may also download Chrome Headless Shell if no compatible local browser is installed yet.
 
