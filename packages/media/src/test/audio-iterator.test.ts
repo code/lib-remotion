@@ -22,7 +22,14 @@ const prepare = async () => {
 			unblock: () => {},
 			[Symbol.dispose]: () => {},
 		}),
-		sharedAudioContext: audioContext,
+		sharedAudioContext: {
+			audioContext,
+			audioSyncAnchor: {value: 0},
+			scheduleAudioNode: () => ({
+				type: 'started',
+				scheduledTime: 0,
+			}),
+		},
 		getIsLooping: () => false,
 		getEndTime: () => Infinity,
 		getStartTime: () => 0,
@@ -229,7 +236,14 @@ test('should not schedule duplicate chunks with playbackRate=0.5', async () => {
 			unblock: () => {},
 			[Symbol.dispose]: () => {},
 		}),
-		sharedAudioContext: audioContext,
+		sharedAudioContext: {
+			audioContext,
+			audioSyncAnchor: {value: 0},
+			scheduleAudioNode: () => ({
+				type: 'started',
+				scheduledTime: 0,
+			}),
+		},
 		getIsLooping: () => false,
 		getEndTime: () => Infinity,
 		getStartTime: () => 0,
@@ -298,7 +312,14 @@ test('should not decode + schedule audio chunks beyond the end time', async () =
 			unblock: () => {},
 			[Symbol.dispose]: () => {},
 		}),
-		sharedAudioContext: audioContext,
+		sharedAudioContext: {
+			audioContext,
+			audioSyncAnchor: {value: 0},
+			scheduleAudioNode: () => ({
+				type: 'started',
+				scheduledTime: 0,
+			}),
+		},
 		getIsLooping: () => false,
 		getEndTime: () => endTime,
 		getStartTime: () => 0,

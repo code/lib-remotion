@@ -10,6 +10,7 @@ import type {DelayPlaybackIfNotPremounting} from './delay-playback-if-not-premou
 import type {Nonce} from './nonce-manager';
 import {makePrewarmedAudioIteratorCache} from './prewarm-iterator-for-looping';
 import {ALLOWED_GLOBAL_TIME_ANCHOR_SHIFT} from './set-global-time-anchor';
+import type {SharedAudioContextForMediaPlayer} from './shared-audio-context-for-media-player';
 
 const MAX_BUFFER_AHEAD_SECONDS = 8;
 
@@ -30,7 +31,7 @@ export const audioIteratorManager = ({
 }: {
 	audioTrack: InputAudioTrack;
 	delayPlaybackHandleIfNotPremounting: () => DelayPlaybackIfNotPremounting;
-	sharedAudioContext: AudioContext;
+	sharedAudioContext: SharedAudioContextForMediaPlayer;
 	getIsLooping: () => boolean;
 	getEndTime: () => number;
 	getStartTime: () => number;
@@ -40,8 +41,8 @@ export const audioIteratorManager = ({
 	let muted = initialMuted;
 	let currentVolume = 1;
 
-	const gainNode = sharedAudioContext.createGain();
-	gainNode.connect(sharedAudioContext.destination);
+	const gainNode = sharedAudioContext.audioContext.createGain();
+	gainNode.connect(sharedAudioContext.audioContext.destination);
 
 	const audioSink = new AudioBufferSink(audioTrack);
 	const prewarmedAudioIteratorCache =
@@ -67,7 +68,7 @@ export const audioIteratorManager = ({
 			throw new Error('Audio buffer iterator not found');
 		}
 
-		if (sharedAudioContext.state !== 'running') {
+		if (sharedAudioContext.audioContext.state !== 'running') {
 			throw new Error(
 				'Tried to schedule node while audio context is not running',
 			);
@@ -77,7 +78,7 @@ export const audioIteratorManager = ({
 			return;
 		}
 
-		const node = sharedAudioContext.createBufferSource();
+		const node = sharedAudioContext.audioContext.createBufferSource();
 		node.buffer = buffer;
 		node.playbackRate.value = playbackRate;
 		node.connect(gainNode);
@@ -106,6 +107,7 @@ export const audioIteratorManager = ({
 			buffer,
 			scheduledTime: started.scheduledTime,
 			playbackRate,
+			scheduledAtAnchor: sharedAudioContext.audioSyncAnchor.value,
 		});
 		node.onended = () => {
 			// Some leniancy is needed as we find that sometimes onended is fired a bit too early
@@ -174,8 +176,9 @@ export const audioIteratorManager = ({
 
 		if (
 			getIsPlaying() &&
-			sharedAudioContext.state === 'running' &&
-			(sharedAudioContext.getOutputTimestamp().contextTime ?? 0) > 0
+			sharedAudioContext.audioContext.state === 'running' &&
+			(sharedAudioContext.audioContext.getOutputTimestamp().contextTime ?? 0) >
+				0
 		) {
 			resumeScheduledAudioChunks({
 				playbackRate,
@@ -236,12 +239,12 @@ export const audioIteratorManager = ({
 		using delayHandle = delayPlaybackHandleIfNotPremounting();
 		currentDelayHandle = delayHandle;
 
-		const iterator = makeAudioIterator(
+		const iterator = makeAudioIterator({
 			startFromSecond,
-			getEndTime(),
-			prewarmedAudioIteratorCache,
+			maximumTimestamp: getEndTime(),
+			cache: prewarmedAudioIteratorCache,
 			debugAudioScheduling,
-		);
+		});
 		audioIteratorsCreated++;
 		audioBufferIterator = iterator;
 
@@ -354,8 +357,8 @@ export const audioIteratorManager = ({
 					from:
 						queuedPeriod.from -
 						ALLOWED_GLOBAL_TIME_ANCHOR_SHIFT -
-						sharedAudioContext.baseLatency -
-						sharedAudioContext.outputLatency,
+						sharedAudioContext.audioContext.baseLatency -
+						sharedAudioContext.audioContext.outputLatency,
 					until: queuedPeriod.until,
 				}
 			: null;

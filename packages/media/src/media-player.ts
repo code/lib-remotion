@@ -292,7 +292,7 @@ export class MediaPlayer {
 					audioTrack,
 					delayPlaybackHandleIfNotPremounting:
 						this.delayPlaybackHandleIfNotPremounting,
-					sharedAudioContext: this.sharedAudioContext.audioContext,
+					sharedAudioContext: this.sharedAudioContext,
 					getIsLooping: () => this.loop,
 					getEndTime: () => this.getEndTime(),
 					getStartTime: () => this.getStartTime(),
