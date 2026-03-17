@@ -42,7 +42,7 @@ const container: React.CSSProperties = {
 
 const noop = () => undefined;
 
-export const Timeline: React.FC = () => {
+const TimelineInner: React.FC = () => {
 	const {sequences} = useContext(Internals.SequenceManager);
 	const videoConfig = Internals.useUnsafeVideoConfig();
 
@@ -132,3 +132,5 @@ export const Timeline: React.FC = () => {
 		</div>
 	);
 };
+
+export const Timeline = React.memo(TimelineInner);
