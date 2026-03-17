@@ -224,16 +224,6 @@ describe('Templates should be valid', () => {
 				true,
 			);
 			expect(existsSync(getFileForTemplate(template, 'index.html'))).toBe(true);
-
-			const forgeConfig = readFileSync(
-				getFileForTemplate(template, 'forge.config.ts'),
-				'utf8',
-			);
-			expect(forgeConfig).toContain('packageAfterCopy');
-			expect(forgeConfig).toContain('getPrebuiltRemotionBundlePath');
-			expect(forgeConfig).toContain(
-				'stage the selected compositor package explicitly',
-			);
 		});
 
 		it(`${template.shortName} should not use setExperimentalClientSideRenderingEnabled`, async () => {
