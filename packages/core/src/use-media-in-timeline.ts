@@ -53,7 +53,7 @@ export const useBasicMediaInTimeline = ({
 	const [initialVolume] = useState<VolumeProp | undefined>(() => volume);
 
 	const mediaDuration = calculateMediaDuration({
-		mediaDurationInFrames: videoConfig.durationInFrames,
+		mediaDurationInFrames: videoConfig.durationInFrames + (trimBefore ?? 0),
 		playbackRate,
 		trimBefore,
 		trimAfter,
