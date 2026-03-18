@@ -1,5 +1,7 @@
 import {
   type CancelSignal,
+  type DownloadBrowserProgressFn,
+  type RenderMediaProgress,
   ensureBrowser,
   renderMedia,
   selectComposition,
@@ -18,6 +20,7 @@ import {
   hasPrebuiltRemotionBundle,
 } from "./remotion-bundle";
 import {getPackagedBrowserPaths} from "./packaged-browser";
+import type {HelloWorldProps} from "../remotion/types";
 
 const compositionId = "HelloWorld";
 
@@ -120,6 +123,10 @@ export const renderVideo = async ({
     wasCancelled = true;
   });
 
+  const inputProps: HelloWorldProps = {
+    titleText: titleText.trim() || "Hello from Electron",
+  };
+
   try {
     onUpdate?.({
       type: "status",
@@ -131,6 +138,13 @@ export const renderVideo = async ({
       onBrowserDownload: ({chromeMode}) => {
         const browserName =
           chromeMode === "chrome-for-testing" ? "Chrome" : "Chrome Headless Shell";
+        const onProgress: DownloadBrowserProgressFn = (progress) => {
+          onUpdate?.({
+            type: "progress",
+            stage: "browser-download",
+            progress: progress.percent,
+          });
+        };
 
         onUpdate?.({
           type: "status",
@@ -139,13 +153,7 @@ export const renderVideo = async ({
 
         return {
           version: null,
-          onProgress: (progress) => {
-            onUpdate?.({
-              type: "progress",
-              stage: "browser-download",
-              progress: progress.percent,
-            });
-          },
+          onProgress,
         };
       },
     });
@@ -168,10 +176,6 @@ export const renderVideo = async ({
       isPackaged,
       projectRoot,
     });
-
-    const inputProps = {
-      titleText: titleText.trim() || "Hello from Electron",
-    };
 
     const composition = await selectComposition({
       serveUrl,
@@ -199,7 +203,7 @@ export const renderVideo = async ({
       binariesDirectory,
       browserExecutable,
       cancelSignal,
-      onProgress(progress) {
+      onProgress(progress: RenderMediaProgress) {
         onUpdate?.({
           type: "progress",
           stage: "rendering",

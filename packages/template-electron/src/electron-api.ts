@@ -1,11 +1,12 @@
+import type {HelloWorldProps} from "../remotion/types";
+
 export const RENDER_VIDEO_CHANNEL = "remotion-electron:render-video";
 export const RENDER_PROGRESS_CHANNEL = "remotion-electron:render-progress";
 export const SELECT_RENDER_OUTPUT_CHANNEL = "remotion-electron:select-render-output";
 export const CANCEL_RENDER_CHANNEL = "remotion-electron:cancel-render";
 export const RENDER_CANCELLED_MESSAGE = "Render cancelled.";
 
-export type RenderRequest = {
-  titleText: string;
+export type RenderRequest = HelloWorldProps & {
   outputPath: string;
 };
 

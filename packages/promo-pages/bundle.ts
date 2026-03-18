@@ -66,6 +66,8 @@ if (!result.success) {
 const outdir = path.resolve('dist');
 
 for (const output of result.outputs) {
+	// On Windows, Bun may return absolute output paths here. Normalize them back
+	// into the local dist directory so we don't accidentally write invalid paths.
 	const relativeOutputPath = path.isAbsolute(output.path)
 		? path.relative(outdir, output.path)
 		: output.path;

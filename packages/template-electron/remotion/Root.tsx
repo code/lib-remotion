@@ -1,7 +1,14 @@
 import {Composition} from "remotion";
 import {HelloWorld} from "./HelloWorld";
+import type {HelloWorldProps} from "./types";
+
+const defaultProps: HelloWorldProps = {
+  titleText: "Hello from Electron",
+};
 
 export const RemotionRoot: React.FC = () => {
+  
+
   return (
     <Composition
       id="HelloWorld"
@@ -10,9 +17,7 @@ export const RemotionRoot: React.FC = () => {
       fps={30}
       width={1280}
       height={720}
-      defaultProps={{
-        titleText: "Hello from Electron",
-      }}
+      defaultProps={defaultProps}
     />
   );
 };

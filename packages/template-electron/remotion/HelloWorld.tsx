@@ -5,10 +5,9 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import type {HelloWorldProps} from "./types";
 
-export const HelloWorld: React.FC<{
-  titleText: string;
-}> = ({titleText}) => {
+export const HelloWorld: React.FC<HelloWorldProps> = ({titleText}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const scale = spring({

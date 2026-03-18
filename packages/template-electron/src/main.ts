@@ -78,7 +78,7 @@ function createWindow(): void {
   }
 }
 
-ipcMain.handle(SELECT_RENDER_OUTPUT_CHANNEL, async (event) => {
+ipcMain.handle(SELECT_RENDER_OUTPUT_CHANNEL, async (event: IpcMainInvokeEvent) => {
   assertTrustedSender(event);
 
   const defaultPath = path.join(
@@ -111,7 +111,9 @@ ipcMain.handle(SELECT_RENDER_OUTPUT_CHANNEL, async (event) => {
   };
 });
 
-ipcMain.handle(RENDER_VIDEO_CHANNEL, async (event, input: RenderRequest) => {
+ipcMain.handle(
+  RENDER_VIDEO_CHANNEL,
+  async (event: IpcMainInvokeEvent, input: RenderRequest) => {
   assertTrustedSender(event);
 
   if (activeRender) {
@@ -162,9 +164,10 @@ ipcMain.handle(RENDER_VIDEO_CHANNEL, async (event, input: RenderRequest) => {
     cancelActiveRender = null;
     activeRender = null;
   }
-});
+  },
+);
 
-ipcMain.handle(CANCEL_RENDER_CHANNEL, async (event) => {
+ipcMain.handle(CANCEL_RENDER_CHANNEL, async (event: IpcMainInvokeEvent) => {
   assertTrustedSender(event);
 
   if (!activeRender || !cancelActiveRender) {
