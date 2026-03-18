@@ -51,7 +51,13 @@ Some Electron packaging setups copy optional binary dependencies automatically. 
 
 ### Browser download
 
-The first render may download Chrome Headless Shell. Surface this progress in your UI if you expose render progress to users.
+The first render may download Chrome Headless Shell.
+
+If your app expects users to render soon after launch, you can call [`ensureBrowser()`](/docs/renderer/ensure-browser) ahead of time, for example in the background after startup, to avoid doing the download during the first render.
+
+This is optional. If rendering is behind a login wall, a purchase step, or another user action, you may prefer to wait until the user actually starts a render.
+
+If you download the browser lazily during rendering, surface this progress in your UI.
 
 ### macOS universal builds
 
