@@ -78,6 +78,7 @@ const config: Config = {
 						{to: 'https://remotion.dev/convert', label: 'Convert a video'},
 						{to: 'https://remotion.dev/timing-editor', label: 'Timing Editor'},
 						{to: '/docs/support', label: 'Support'},
+						{to: '/templates', label: 'Templates'},
 					],
 				},
 				{
@@ -124,6 +125,10 @@ const config: Config = {
 						{
 							label: 'Getting started',
 							to: '/docs/',
+						},
+						{
+							label: 'Templates',
+							to: '/templates',
 						},
 						{
 							label: 'API Reference',
