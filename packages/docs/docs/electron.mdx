@@ -12,7 +12,7 @@ crumb: 'Integrations'
 <p>Use the official template as a reference. Your final setup will depend on your bundler, packaging target, and platform-specific requirements.</p>
 </ExperimentalBadge>
 
-The official [`template-electron`](https://github.com/remotion-dev/remotion/tree/main/packages/template-electron) is the recommended baseline.
+The official [Electron template](/templates/electron) is the recommended baseline.
 
 Use this page for the caveats of Electron integration, not as a strict setup guide. App structure, installers, code signing, auto-updates, and packaging hooks differ between apps.
 
@@ -69,7 +69,7 @@ Remotion ships separate Linux compositor packages for those environments, for ex
 
 During packaging, include the compositor package that matches the Linux variant you ship for and stage it into `app.asar.unpacked`. If you distribute separate builds for Ubuntu/Debian and Alpine, package each build with its matching compositor package.
 
-The official template accounts for this by selecting the compositor package that matches the libc of the machine doing the packaging. This works when you package on the same Linux family that you target, but it does not produce one Linux artifact that works on both `glibc` and `musl`.
+The official [Electron template](/templates/electron) accounts for this by selecting the compositor package that matches the libc of the machine doing the packaging. This works when you package on the same Linux family that you target, but it does not produce one Linux artifact that works on both `glibc` and `musl`.
 
 This matters because the packaged app loads a native compositor binary. A `glibc` binary may fail on a `musl` system, and vice versa.
 
