@@ -17,6 +17,7 @@ import {
   getPrebuiltRemotionBundlePath,
   hasPrebuiltRemotionBundle,
 } from "./remotion-bundle";
+import {getPackagedBrowserPaths} from "./packaged-browser";
 
 const compositionId = "HelloWorld";
 
@@ -99,6 +100,13 @@ export const renderVideo = async ({
   cancelSignal?: CancelSignal;
 }): Promise<RenderResult> => {
   let wasCancelled = false;
+  const browserExecutable = isPackaged
+    ? getPackagedBrowserPaths({
+        arch: process.arch,
+        platform: process.platform,
+        projectRoot,
+      })?.packagedBrowserExecutablePath ?? null
+    : null;
 
   async function finishCancelledRender(): Promise<RenderResult> {
     await rm(outputPath, {force: true});
@@ -119,6 +127,7 @@ export const renderVideo = async ({
     });
 
     await ensureBrowser({
+      browserExecutable,
       onBrowserDownload: ({chromeMode}) => {
         const browserName =
           chromeMode === "chrome-for-testing" ? "Chrome" : "Chrome Headless Shell";
@@ -169,6 +178,7 @@ export const renderVideo = async ({
       id: compositionId,
       inputProps,
       binariesDirectory,
+      browserExecutable,
     });
 
     if (wasCancelled) {
@@ -187,6 +197,7 @@ export const renderVideo = async ({
       outputLocation: outputPath,
       inputProps,
       binariesDirectory,
+      browserExecutable,
       cancelSignal,
       onProgress(progress) {
         onUpdate?.({

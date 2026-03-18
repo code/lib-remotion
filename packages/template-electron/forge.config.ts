@@ -1,7 +1,10 @@
+import {existsSync} from "node:fs";
 import {cp, mkdir} from "node:fs/promises";
 import path from "node:path";
+import {ensureBrowser} from "@remotion/renderer";
 import {VitePlugin} from "@electron-forge/plugin-vite";
 import {getCompositorPackage} from "./src/compositor-package";
+import {getPackagedBrowserPaths} from "./src/packaged-browser";
 import {bundleRemotionProject, getPrebuiltRemotionBundlePath} from "./src/remotion-bundle";
 
 const DARWIN_COMPOSITOR_PACKAGES = [
@@ -109,9 +112,53 @@ async function stageCompositorPackages({
   }
 }
 
+export async function stageBrowser({
+  arch,
+  buildPath,
+  platform,
+}: {
+  arch: string;
+  buildPath: string;
+  platform: string;
+}): Promise<void> {
+  const browserPaths = getPackagedBrowserPaths({
+    arch,
+    buildPath,
+    platform,
+    projectRoot: process.cwd(),
+  });
+
+  if (!browserPaths) {
+    return;
+  }
+
+  await ensureBrowser();
+  if (!existsSync(browserPaths.downloadedBrowserFolder)) {
+    return;
+  }
+
+  if (!browserPaths.packagedBrowserCopyDestination) {
+    return;
+  }
+
+  await mkdir(path.dirname(browserPaths.packagedBrowserCopyDestination), {
+    recursive: true,
+  });
+
+  await cp(
+    browserPaths.downloadedBrowserFolder,
+    browserPaths.packagedBrowserCopyDestination,
+    {recursive: true},
+  );
+}
+
 const config = {
   packagerConfig: {
     asar: {
+      // Uncomment the line below if you also uncomment the browser staging block.
+      // This will increase the final app size significantly, but packaged renders
+      // can run completely offline.
+      // unpackDir: "{node_modules/@remotion/compositor-*,remotion-browser}",
       unpackDir: "node_modules/@remotion/compositor-*",
     },
     osxUniversal: {
@@ -133,6 +180,19 @@ const config = {
         projectRoot: process.cwd(),
         outDir: getPrebuiltRemotionBundlePath(buildPath),
       });
+
+      // Uncomment to package Chrome Headless Shell into the app.
+      // This will increase the final app size significantly, but packaged renders
+      // can run completely offline.
+      // IMPORTANT: This is not supported for macOS universal builds. `ensureBrowser()` only
+      // downloads a browser for the current architecture, so the other packaged
+      // architecture would not get an offline browser. For universal builds,
+      // prefer calling `ensureBrowser()` at runtime instead.
+      // await stageBrowser({
+      //   arch,
+      //   buildPath,
+      //   platform,
+      // });
 
       // Electron Forge's Vite packaging does not materialize this optional runtime binary
       // into the packaged app automatically, so stage the required compositor packages explicitly.

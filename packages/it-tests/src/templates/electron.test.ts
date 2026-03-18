@@ -84,6 +84,33 @@ async function copyTemplateForPublishCheck(workingDir: string): Promise<void> {
 		packageJsonPath,
 		contents.replaceAll('workspace:*', `^${remotionVersion}`),
 	);
+
+	const forgeConfigPath = path.join(workingDir, 'forge.config.ts');
+	const forgeConfig = readFileSync(forgeConfigPath, 'utf8');
+	writeFileSync(
+		forgeConfigPath,
+		forgeConfig
+			.replace(
+				'// unpackDir: "{node_modules/@remotion/compositor-*,remotion-browser}",',
+				'unpackDir: "{node_modules/@remotion/compositor-*,remotion-browser}",',
+			)
+			.replace(
+				'unpackDir: "node_modules/@remotion/compositor-*",',
+				'// unpackDir: "node_modules/@remotion/compositor-*",',
+			)
+			.replace(
+				`// await stageBrowser({
+      //   arch,
+      //   buildPath,
+      //   platform,
+      // });`,
+				`await stageBrowser({
+        arch,
+        buildPath,
+        platform,
+      });`,
+			),
+	);
 }
 
 async function packagePublishedTemplate(workingDir: string): Promise<void> {
@@ -98,15 +125,95 @@ async function packagePublishedTemplate(workingDir: string): Promise<void> {
 	});
 }
 
+function getPackagedProjectRoot(workingDir: string): string {
+	return path.join(getPackagedResourcesPath(workingDir), 'app.asar');
+}
+
+function getPackagedBrowserExecutableRelativePath(): string | null {
+	// There is no public API that exposes the downloaded browser layout.
+	// This test intentionally asserts the current packaged folder structure so we
+	// notice if `ensureBrowser()` changes where Headless Shell is placed. We keep
+	// the expectation local to the test instead of importing renderer internals.
+	switch (process.platform) {
+		case 'darwin':
+			if (process.arch === 'arm64') {
+				return path.join(
+					'remotion-browser',
+					'mac-arm64',
+					'chrome-headless-shell-mac-arm64',
+					'chrome-headless-shell',
+				);
+			}
+
+			if (process.arch === 'x64') {
+				return path.join(
+					'remotion-browser',
+					'mac-x64',
+					'chrome-headless-shell-mac-x64',
+					'chrome-headless-shell',
+				);
+			}
+
+			return null;
+		case 'linux':
+			if (process.arch === 'arm64') {
+				return path.join(
+					'remotion-browser',
+					'linux-arm64',
+					'chrome-headless-shell-linux-arm64',
+					'headless_shell',
+				);
+			}
+
+			if (process.arch === 'x64') {
+				return path.join(
+					'remotion-browser',
+					'linux64',
+					'chrome-headless-shell-linux64',
+					'chrome-headless-shell',
+				);
+			}
+
+			return null;
+		case 'win32':
+			if (process.arch === 'x64') {
+				return path.join(
+					'remotion-browser',
+					'win64',
+					'chrome-headless-shell-win64',
+					'chrome-headless-shell.exe',
+				);
+			}
+
+			return null;
+		default:
+			return null;
+	}
+}
+
+function getPackagedBrowserExecutablePath(workingDir: string): string | null {
+	const relativePath = getPackagedBrowserExecutableRelativePath();
+
+	if (!relativePath) {
+		return null;
+	}
+
+	return path.join(
+		path.dirname(getPackagedProjectRoot(workingDir)),
+		'app.asar.unpacked',
+		relativePath,
+	);
+}
+
 async function runPackagedRender(
 	workingDir: string,
 	outputPath: string,
-): Promise<void> {
+): Promise<string> {
 	const launchPath = getLaunchPath(workingDir);
 	const commonOptions = {
 		cwd: path.dirname(launchPath),
-		stdio: 'inherit' as const,
 		timeout: 240000,
+		all: true as const,
 	};
 	const linuxLaunchArgs =
 		process.platform === 'linux'
@@ -131,8 +238,12 @@ async function runPackagedRender(
 		!process.env.WAYLAND_DISPLAY
 	) {
 		try {
-			await execa('xvfb-run', ['-a', launchPath, ...launchArgs], commonOptions);
-			return;
+			const {all} = await execa(
+				'xvfb-run',
+				['-a', launchPath, ...launchArgs],
+				commonOptions,
+			);
+			return all ?? '';
 		} catch (error) {
 			const execaError = error as {code?: string};
 			if (execaError.code !== 'ENOENT') {
@@ -143,7 +254,8 @@ async function runPackagedRender(
 		}
 	}
 
-	await execa(launchPath, launchArgs, commonOptions);
+	const {all} = await execa(launchPath, launchArgs, commonOptions);
+	return all ?? '';
 }
 
 test('Electron template should package and render after publish-style dependency rewriting', async () => {
@@ -154,10 +266,26 @@ test('Electron template should package and render after publish-style dependency
 		await packagePublishedTemplate(workingDir);
 
 		const resourcesPath = getPackagedResourcesPath(workingDir);
+
 		expect(existsSync(path.join(resourcesPath, 'app.asar'))).toBe(true);
 
-		await runPackagedRender(workingDir, outputPath);
+		const packagedBrowserExecutable =
+			getPackagedBrowserExecutablePath(workingDir);
 
+		expect(packagedBrowserExecutable).toBeTruthy();
+
+		if (!packagedBrowserExecutable) {
+			throw new Error(
+				'Expected packaged browser executable path to be resolvable',
+			);
+		}
+
+		expect(existsSync(packagedBrowserExecutable)).toBe(true);
+
+		const output = await runPackagedRender(workingDir, outputPath);
+
+		expect(output).not.toContain('Downloading Chrome');
+		expect(output).not.toContain('Downloading Chrome Headless Shell');
 		expect(existsSync(outputPath)).toBe(true);
 		expect(statSync(outputPath).size).toBeGreaterThan(0);
 	} finally {
