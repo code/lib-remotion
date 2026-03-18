@@ -4,6 +4,7 @@ import {
 	existsSync,
 	mkdirSync,
 	mkdtempSync,
+	readdirSync,
 	readFileSync,
 	rmSync,
 	statSync,
@@ -129,80 +130,69 @@ function getPackagedProjectRoot(workingDir: string): string {
 	return path.join(getPackagedResourcesPath(workingDir), 'app.asar');
 }
 
-function getPackagedBrowserExecutableRelativePath(): string | null {
-	// There is no public API that exposes the downloaded browser layout.
-	// This test intentionally asserts the current packaged folder structure so we
-	// notice if `ensureBrowser()` changes where Headless Shell is placed. We keep
-	// the expectation local to the test instead of importing renderer internals.
+function getPackagedBrowserExecutableName(): string | null {
 	switch (process.platform) {
 		case 'darwin':
-			if (process.arch === 'arm64') {
-				return path.join(
-					'remotion-browser',
-					'mac-arm64',
-					'chrome-headless-shell-mac-arm64',
-					'chrome-headless-shell',
-				);
-			}
-
-			if (process.arch === 'x64') {
-				return path.join(
-					'remotion-browser',
-					'mac-x64',
-					'chrome-headless-shell-mac-x64',
-					'chrome-headless-shell',
-				);
-			}
-
-			return null;
+			return process.arch === 'arm64' || process.arch === 'x64'
+				? 'chrome-headless-shell'
+				: null;
 		case 'linux':
 			if (process.arch === 'arm64') {
-				return path.join(
-					'remotion-browser',
-					'linux-arm64',
-					'chrome-headless-shell-linux-arm64',
-					'headless_shell',
-				);
+				return 'headless_shell';
 			}
 
-			if (process.arch === 'x64') {
-				return path.join(
-					'remotion-browser',
-					'linux64',
-					'chrome-headless-shell-linux64',
-					'chrome-headless-shell',
-				);
-			}
-
-			return null;
+			return process.arch === 'x64' ? 'chrome-headless-shell' : null;
 		case 'win32':
-			if (process.arch === 'x64') {
-				return path.join(
-					'remotion-browser',
-					'win64',
-					'chrome-headless-shell-win64',
-					'chrome-headless-shell.exe',
-				);
-			}
-
-			return null;
+			return process.arch === 'x64' ? 'chrome-headless-shell.exe' : null;
 		default:
 			return null;
 	}
 }
 
-function getPackagedBrowserExecutablePath(workingDir: string): string | null {
-	const relativePath = getPackagedBrowserExecutableRelativePath();
+function findFileRecursively(
+	searchDir: string,
+	fileName: string,
+): string | null {
+	for (const entry of readdirSync(searchDir, {withFileTypes: true})) {
+		const entryPath = path.join(searchDir, entry.name);
+		if (entry.isFile() && entry.name === fileName) {
+			return entryPath;
+		}
 
-	if (!relativePath) {
+		if (entry.isDirectory()) {
+			const nestedMatch = findFileRecursively(entryPath, fileName);
+			if (nestedMatch) {
+				return nestedMatch;
+			}
+		}
+	}
+
+	return null;
+}
+
+function getPackagedBrowserExecutablePath(workingDir: string): string | null {
+	const executableName = getPackagedBrowserExecutableName();
+	if (!executableName) {
 		return null;
 	}
 
-	return path.join(
+	// There is no public API that exposes the downloaded browser layout.
+	// This test intentionally asserts that a packaged browser executable is present
+	// under `remotion-browser/` so we notice if `ensureBrowser()` changes where
+	// Headless Shell is placed. If that layout changes, the template still needs an
+	// update - this test only detects the drift. We keep the expectation local to
+	// the test instead of importing renderer internals.
+	const browserRoot = path.join(
 		path.dirname(getPackagedProjectRoot(workingDir)),
 		'app.asar.unpacked',
-		relativePath,
+		'remotion-browser',
 	);
+
+	if (!existsSync(browserRoot)) {
+		return null;
+	}
+
+	return findFileRecursively(browserRoot, executableName);
 }
 
 async function runPackagedRender(
