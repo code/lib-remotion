@@ -61,7 +61,17 @@ If your packaging flow produces a universal app from separate x64 and arm64 app 
 
 ### Linux variants
 
-Linux may require different compositor packages for glibc and musl.
+Like on other platforms, the packaged app must include a native compositor binary that matches the target system.
+
+Linux needs extra care because there are multiple supported variants within Linux itself. Besides CPU architecture, you may also need a different binary for `glibc`-based distributions such as Ubuntu and Debian than for `musl`-based distributions such as Alpine.
+
+Remotion ships separate Linux compositor packages for those environments, for example `@remotion/compositor-linux-x64-gnu` and `@remotion/compositor-linux-x64-musl`.
+
+During packaging, include the compositor package that matches the Linux variant you ship for and stage it into `app.asar.unpacked`. If you distribute separate builds for Ubuntu/Debian and Alpine, package each build with its matching compositor package.
+
+The official template accounts for this by selecting the compositor package that matches the libc of the machine doing the packaging. This works when you package on the same Linux family that you target, but it does not produce one Linux artifact that works on both `glibc` and `musl`.
+
+This matters because the packaged app loads a native compositor binary. A `glibc` binary may fail on a `musl` system, and vice versa.
 
 ### Installers and code signing
 
