@@ -314,13 +314,13 @@ export const FEATURED_TEMPLATES: Template[] = [
 		description: 'Render Remotion videos from a desktop app',
 		longerDescription:
 			'An Electron Forge + Vite starter template that renders Remotion videos from the Electron main process.',
-		promoBanner: {
-			width: 1200,
-			height: 630,
-			src: '/generated/articles-docs-electron.png',
+		promoVideo: {
+			muxId: 'EvaWtUbbZ5zuYQ5EZFcZ501fg4JPtdVXXt9K02Rf62xcM',
+			width: 1920,
+			height: 1080,
 		},
 		cliId: 'electron' as const,
-		type: 'image' as const,
+		type: 'video' as const,
 		defaultBranch: 'main',
 		featuredOnHomePage: null,
 		previewURL: null,
