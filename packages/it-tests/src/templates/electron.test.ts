@@ -85,33 +85,6 @@ async function copyTemplateForPublishCheck(workingDir: string): Promise<void> {
 		packageJsonPath,
 		contents.replaceAll('workspace:*', `^${remotionVersion}`),
 	);
-
-	const forgeConfigPath = path.join(workingDir, 'forge.config.ts');
-	const forgeConfig = readFileSync(forgeConfigPath, 'utf8');
-	writeFileSync(
-		forgeConfigPath,
-		forgeConfig
-			.replace(
-				'// unpackDir: "{node_modules/@remotion/compositor-*,remotion-browser}",',
-				'unpackDir: "{node_modules/@remotion/compositor-*,remotion-browser}",',
-			)
-			.replace(
-				'unpackDir: "node_modules/@remotion/compositor-*",',
-				'// unpackDir: "node_modules/@remotion/compositor-*",',
-			)
-			.replace(
-				`// await stageBrowser({
-      //   arch,
-      //   buildPath,
-      //   platform,
-      // });`,
-				`await stageBrowser({
-        arch,
-        buildPath,
-        platform,
-      });`,
-			),
-	);
 }
 
 async function packagePublishedTemplate(workingDir: string): Promise<void> {
@@ -123,6 +96,10 @@ async function packagePublishedTemplate(workingDir: string): Promise<void> {
 	await execa('bun', ['run', 'package'], {
 		cwd: workingDir,
 		stdio: 'inherit',
+		env: {
+			...process.env,
+			REMOTION_ELECTRON_PACKAGE_BROWSER: 'true',
+		},
 	});
 }
 

@@ -11,8 +11,10 @@ const DARWIN_COMPOSITOR_PACKAGES = [
   "@remotion/compositor-darwin-x64",
   "@remotion/compositor-darwin-arm64",
 ];
+const PACKAGE_BROWSER_ENV_VAR = "REMOTION_ELECTRON_PACKAGE_BROWSER";
+const shouldPackageBrowser = process.env[PACKAGE_BROWSER_ENV_VAR] === "true";
 
-const DARWIN_UNIVERSAL_X64_ARCH_FILES =
+const DARWIN_UNIVERSAL_ARCH_FILES =
   "Contents/Resources/app.asar.unpacked/node_modules/@remotion/compositor-darwin-*/**";
 
 function getCompositorPackagesForPackaging({
@@ -155,16 +157,14 @@ export async function stageBrowser({
 const config = {
   packagerConfig: {
     asar: {
-      // Uncomment the line below if you also uncomment the browser staging block.
-      // This will increase the final app size significantly, but packaged renders
-      // can run completely offline.
-      // unpackDir: "{node_modules/@remotion/compositor-*,remotion-browser}",
-      unpackDir: "node_modules/@remotion/compositor-*",
+      unpackDir: shouldPackageBrowser
+        ? "{node_modules/@remotion/compositor-*,remotion-browser}"
+        : "node_modules/@remotion/compositor-*",
     },
     osxUniversal: {
       // These compositor binaries are already architecture-specific and should not be
       // merged with lipo during universal packaging.
-      x64ArchFiles: DARWIN_UNIVERSAL_X64_ARCH_FILES,
+      x64ArchFiles: DARWIN_UNIVERSAL_ARCH_FILES,
     },
   },
   rebuildConfig: {},
@@ -181,18 +181,20 @@ const config = {
         outDir: getPrebuiltRemotionBundlePath(buildPath),
       });
 
-      // Uncomment to package Chrome Headless Shell into the app.
-      // This will increase the final app size significantly, but packaged renders
-      // can run completely offline.
-      // IMPORTANT: This is not supported for macOS universal builds. `ensureBrowser()` only
-      // downloads a browser for the current architecture, so the other packaged
-      // architecture would not get an offline browser. For universal builds,
-      // prefer calling `ensureBrowser()` at runtime instead.
-      // await stageBrowser({
-      //   arch,
-      //   buildPath,
-      //   platform,
-      // });
+      // Set REMOTION_ELECTRON_PACKAGE_BROWSER=true to package Chrome Headless
+      // Shell into the app. This increases the final app size significantly, but
+      // packaged renders can run completely offline.
+      // IMPORTANT: This is not supported for macOS universal builds.
+      // `ensureBrowser()` only downloads a browser for the current architecture,
+      // so the other packaged architecture would not get an offline browser.
+      // For universal builds, prefer calling `ensureBrowser()` at runtime instead.
+      if (shouldPackageBrowser) {
+        await stageBrowser({
+          arch,
+          buildPath,
+          platform,
+        });
+      }
 
       // Electron Forge's Vite packaging does not materialize this optional runtime binary
       // into the packaged app automatically, so stage the required compositor packages explicitly.

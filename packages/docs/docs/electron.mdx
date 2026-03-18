@@ -59,7 +59,7 @@ If rendering is behind a login wall, a purchase step, or another user action, yo
 
 If you want to avoid a first-use download in packaged builds, you can also treat the browser as a packaged asset. Call [`ensureBrowser()`](/docs/renderer/ensure-browser) during packaging, copy the downloaded browser into `app.asar.unpacked`, and pass its path through the `browserExecutable` option in your packaged renders.
 
-The official [Electron template](/templates/electron) leaves this disabled by default. Uncomment the browser staging block in `forge.config.ts` if you want packaged renders to work completely offline. This will increase the final app size significantly.
+The official [Electron template](/templates/electron) leaves this disabled by default. Set `REMOTION_ELECTRON_PACKAGE_BROWSER=true` during packaging if you want packaged renders to work completely offline. This will increase the final app size significantly.
 
 This is not supported for macOS universal builds. [`ensureBrowser()`](/docs/renderer/ensure-browser) only downloads a browser for the current architecture, so the other packaged architecture would not get an offline browser. For universal builds, prefer calling [`ensureBrowser()`](/docs/renderer/ensure-browser) at runtime instead.
 
