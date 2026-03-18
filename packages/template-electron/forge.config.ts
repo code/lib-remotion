@@ -26,27 +26,87 @@ function getCompositorPackagesForPackaging({
   return [getCompositorPackage({arch, platform})];
 }
 
-async function stageCompositorPackage({
-  buildPath,
+function isMissingPackageError(error: unknown): error is NodeJS.ErrnoException {
+  return (
+    error instanceof Error && "code" in error && error.code === "MODULE_NOT_FOUND"
+  );
+}
+
+function shouldAllowMissingCompositorPackage({
+  arch,
+  compositorPackage,
+  platform,
+}: {
+  arch: string;
+  compositorPackage: string;
+  platform: string;
+}): boolean {
+  if (platform !== "darwin" || arch === "universal") {
+    return false;
+  }
+
+  return compositorPackage !== getCompositorPackage({arch, platform});
+}
+
+function resolveInstalledCompositorPackageDirectory({
+  allowMissing,
   compositorPackage,
 }: {
-  buildPath: string;
+  allowMissing: boolean;
   compositorPackage: string;
+}): string | null {
+  try {
+    const compositorPackageJson = require.resolve(`${compositorPackage}/package.json`, {
+      paths: [process.cwd()],
+    });
+
+    return path.dirname(compositorPackageJson);
+  } catch (error: unknown) {
+    if (allowMissing && isMissingPackageError(error)) {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
+async function stageCompositorPackages({
+  arch,
+  buildPath,
+  platform,
+}: {
+  arch: string;
+  buildPath: string;
+  platform: string;
 }): Promise<void> {
-  const compositorPackageJson = require.resolve(`${compositorPackage}/package.json`, {
-    paths: [process.cwd()],
+  const compositorPackages = getCompositorPackagesForPackaging({
+    arch,
+    platform,
   });
 
-  const compositorSource = path.dirname(compositorPackageJson);
-  
-  const compositorDestination = path.join(
-    buildPath,
-    "node_modules",
-    compositorPackage,
-  );
+  for (const compositorPackage of compositorPackages) {
+    const compositorSource = resolveInstalledCompositorPackageDirectory({
+      allowMissing: shouldAllowMissingCompositorPackage({
+        arch,
+        compositorPackage,
+        platform,
+      }),
+      compositorPackage,
+    });
 
-  await mkdir(path.dirname(compositorDestination), {recursive: true});
-  await cp(compositorSource, compositorDestination, {recursive: true});
+    if (!compositorSource) {
+      continue;
+    }
+
+    const compositorDestination = path.join(
+      buildPath,
+      "node_modules",
+      compositorPackage,
+    );
+
+    await mkdir(path.dirname(compositorDestination), {recursive: true});
+    await cp(compositorSource, compositorDestination, {recursive: true});
+  }
 }
 
 const config = {
@@ -76,18 +136,11 @@ const config = {
 
       // Electron Forge's Vite packaging does not materialize this optional runtime binary
       // into the packaged app automatically, so stage the required compositor packages explicitly.
-      const compositorPackages = getCompositorPackagesForPackaging({
+      await stageCompositorPackages({
         arch,
+        buildPath,
         platform,
       });
-
-      for (const compositorPackage of compositorPackages) {
-        await stageCompositorPackage({
-          buildPath,
-          compositorPackage,
-        });
-      }
-
     },
   },
   plugins: [
