@@ -1,12 +1,15 @@
 import {
 	AbsoluteFill,
+	Audio,
 	Easing,
 	interpolate,
 	spring,
+	staticFile,
 	useCurrentFrame,
 	useVideoConfig,
 } from 'remotion';
 import {z} from 'zod';
+import {MESSAGES} from './messages';
 import {Thinking} from './Thinking';
 
 const TYPING_DURATION_SECONDS = 2;
@@ -53,6 +56,10 @@ const Cursor: React.FC<{frame: number}> = ({frame}) => {
 };
 
 export const Prompt: React.FC<PromptProps> = ({prompt, thinkingIndex}) => {
+	const clampedThinkingIndex = Math.max(
+		0,
+		Math.min(MESSAGES.length - 1, thinkingIndex),
+	);
 	const rawFrame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const frame = Math.floor(rawFrame / POSTERIZE_FRAMES) * POSTERIZE_FRAMES;
@@ -105,6 +112,7 @@ export const Prompt: React.FC<PromptProps> = ({prompt, thinkingIndex}) => {
 				paddingBottom: 80,
 			}}
 		>
+			<Audio src={staticFile('prompt-appear.wav')} />
 			<div
 				style={{
 					backgroundColor: '#292C34',
@@ -136,7 +144,7 @@ export const Prompt: React.FC<PromptProps> = ({prompt, thinkingIndex}) => {
 					}}
 				/>
 				<div style={{opacity: thinkingOpacity}}>
-					<Thinking index={thinkingIndex} />
+					<Thinking index={clampedThinkingIndex} />
 				</div>
 			</div>
 		</AbsoluteFill>
