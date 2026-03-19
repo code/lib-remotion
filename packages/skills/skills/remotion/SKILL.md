@@ -19,7 +19,7 @@ For some video operations, such as trimming videos or detecting silence, FFmpeg 
 
 ## Silence detection
 
-When needing to detect and trim silent segments from video or audio files, load the [./rules/silence-detection.md](./rules/silence-detection.md) file. It uses adaptive per-file loudness thresholds (EBU R128) for accurate results across recordings with different volume levels. Requires FFmpeg — see [./rules/ffmpeg.md](./rules/ffmpeg.md).
+When needing to detect and trim silent segments from video or audio files, load the [./rules/silence-detection.md](./rules/silence-detection.md) file.
 
 ## Audio visualization
 

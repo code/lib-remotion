@@ -18,14 +18,7 @@ bunx remotion ffprobe input.mp4
 
 You have 2 options for trimming videos:
 
-1. Use the FFmpeg command line. You MUST re-encode the video to avoid frozen frames at the start of the video.
-
-```bash
-# Re-encodes from the exact frame
-bunx remotion ffmpeg -ss 00:00:05 -i public/input.mp4 -to 00:00:10 -c:v libx264 -c:a aac public/output.mp4
-```
-
-2. Use the `trimBefore` and `trimAfter` props of the `<Video>` component. The benefit is that this is non-destructive and you can change the trim at any time.
+1. **Preferred**: Use the `trimBefore` and `trimAfter` props of the `<Video>` component. This is non-destructive, requires no re-encoding, and you can change the trim at any time.
 
 ```tsx
 import { Video } from "@remotion/media";
@@ -35,4 +28,11 @@ import { Video } from "@remotion/media";
   trimBefore={5 * fps}
   trimAfter={10 * fps}
 />;
+```
+
+2. Use the FFmpeg command line. You MUST re-encode the video to avoid frozen frames at the start of the video. Only use this if you need a standalone trimmed file (e.g. for upload or external use).
+
+```bash
+# Re-encodes from the exact frame
+bunx remotion ffmpeg -ss 00:00:05 -i public/input.mp4 -to 00:00:10 -c:v libx264 -c:a aac public/output.mp4
 ```
