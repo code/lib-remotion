@@ -17,6 +17,10 @@ When dealing with captions or subtitles, load the [./rules/subtitles.md](./rules
 
 For some video operations, such as trimming videos or detecting silence, FFmpeg should be used. Load the [./rules/ffmpeg.md](./rules/ffmpeg.md) file for more information.
 
+## Silence detection
+
+When needing to detect and trim silent segments from video or audio files, load the [./rules/silence-detection.md](./rules/silence-detection.md) file. It uses adaptive per-file loudness thresholds (EBU R128) for accurate results across recordings with different volume levels. Requires FFmpeg — see [./rules/ffmpeg.md](./rules/ffmpeg.md).
+
 ## Audio visualization
 
 When needing to visualize audio (spectrum bars, waveforms, bass-reactive effects), load the [./rules/audio-visualization.md](./rules/audio-visualization.md) file for more information.
@@ -58,4 +62,5 @@ Read individual rule files for detailed explanations and code examples:
 - [rules/videos.md](rules/videos.md) - Embedding videos in Remotion - trimming, volume, speed, looping, pitch
 - [rules/parameters.md](rules/parameters.md) - Make a video parametrizable by adding a Zod schema
 - [rules/maps.md](rules/maps.md) - Add a map using Mapbox and animate it
+- [rules/silence-detection.md](rules/silence-detection.md) - Adaptive silence detection using FFmpeg loudnorm and silencedetect
 - [rules/voiceover.md](rules/voiceover.md) - Adding AI-generated voiceover to Remotion compositions using ElevenLabs TTS
