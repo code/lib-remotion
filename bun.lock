@@ -1044,8 +1044,6 @@
       "name": "@remotion/media-utils",
       "version": "4.0.436",
       "dependencies": {
-        "@remotion/media-parser": "workspace:*",
-        "@remotion/webcodecs": "workspace:*",
         "mediabunny": "catalog:",
         "remotion": "workspace:*",
       },
