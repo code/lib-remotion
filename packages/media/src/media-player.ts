@@ -660,7 +660,7 @@ export class MediaPlayer {
 		const timeInSeconds = globalTime - this.sequenceOffset;
 		const localTime = this.getTrimmedTime(timeInSeconds);
 		if (localTime === null) {
-			throw new Error('hmm, should not render!');
+			return {type: 'not-started'};
 		}
 
 		const targetTime =
