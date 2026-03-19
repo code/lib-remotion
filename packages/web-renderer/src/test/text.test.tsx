@@ -2,6 +2,7 @@ import {test} from 'vitest';
 import {renderStillOnWeb} from '../render-still-on-web';
 import '../symbol-dispose';
 import {fontStyle} from './fixtures/text/font-style';
+import {fontVariantCaps} from './fixtures/text/font-variant-caps';
 import {letterSpacing} from './fixtures/text/letter-spacing';
 import {paragraphs} from './fixtures/text/paragraphs';
 import {textFixture} from './fixtures/text/text';
@@ -84,6 +85,23 @@ test('should render text with font style', async () => {
 	await testImage({
 		blob,
 		testId: 'font-style',
+		threshold: 0,
+		allowedMismatchedPixelRatio: 0.01,
+	});
+});
+
+test('should render text with font variant caps', async () => {
+	const {blob} = await renderStillOnWeb({
+		licenseKey: 'free-license',
+		composition: fontVariantCaps,
+		frame: 0,
+		inputProps: {},
+		imageFormat: 'png',
+	});
+
+	await testImage({
+		blob,
+		testId: 'font-variant-caps',
 		threshold: 0,
 		allowedMismatchedPixelRatio: 0.01,
 	});
