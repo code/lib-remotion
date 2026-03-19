@@ -55,6 +55,7 @@ import {backgroundClipText} from './fixtures/text/background-clip-text';
 import {backgroundClipText3dTransform} from './fixtures/text/background-clip-text-3d-transform';
 import {filterText} from './fixtures/text/filter-text';
 import {fontStyle} from './fixtures/text/font-style';
+import {fontVariantCaps} from './fixtures/text/font-variant-caps';
 import {letterSpacing} from './fixtures/text/letter-spacing';
 import {paragraphs} from './fixtures/text/paragraphs';
 import {textFixture} from './fixtures/text/text';
@@ -142,6 +143,7 @@ export const Root: React.FC = () => {
 				<Composition {...letterSpacing} />
 				<Composition {...textTransform} />
 				<Composition {...fontStyle} />
+				<Composition {...fontVariantCaps} />
 				<Composition {...lineHeight} />
 				<Composition {...webkitTextFillColor} />
 				<Composition {...webkitTextStroke} />
