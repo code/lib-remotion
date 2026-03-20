@@ -10,13 +10,13 @@
  * - No semver postcss version check
  * - Hardcoded default options (url: true, import: true, esModule: true)
  */
-"use strict";
+'use strict';
 
-const {getOptions, stringifyRequest} = require("loader-utils");
-const postcss = require("postcss");
-const CssSyntaxError = require("./CssSyntaxError");
-const Warning = require("./Warning");
-const {importParser, urlParser} = require("./plugins");
+const {getOptions, stringifyRequest} = require('loader-utils');
+const postcss = require('postcss');
+const CssSyntaxError = require('./CssSyntaxError');
+const Warning = require('./Warning');
+const {importParser, urlParser} = require('./plugins');
 const {
 	normalizeUrl,
 	requestify,
@@ -31,7 +31,7 @@ const {
 	sort,
 	combineRequests,
 	WEBPACK_IGNORE_COMMENT_REGEXP,
-} = require("./utils");
+} = require('./utils');
 
 async function loader(content, map, meta) {
 	const callback = this.async();
@@ -46,13 +46,13 @@ async function loader(content, map, meta) {
 	const importPluginApi = [];
 
 	const importResolver = this.getResolve({
-		conditionNames: ["style"],
-		extensions: [".css"],
-		mainFields: ["css", "style", "main", "..."],
-		mainFiles: ["index", "..."],
+		conditionNames: ['style'],
+		extensions: ['.css'],
+		mainFields: ['css', 'style', 'main', '...'],
+		mainFiles: ['index', '...'],
 	});
 
-	plugins = [
+	const plugins = [
 		importParser({
 			imports: importPluginImports,
 			api: importPluginApi,
@@ -72,8 +72,8 @@ async function loader(content, map, meta) {
 	const urlPluginImports = [];
 
 	const urlResolver = this.getResolve({
-		conditionNames: ["asset"],
-		mainFields: ["asset"],
+		conditionNames: ['asset'],
+		mainFields: ['asset'],
 		mainFiles: [],
 		extensions: [],
 	});
@@ -112,7 +112,7 @@ async function loader(content, map, meta) {
 		}
 
 		callback(
-			error.name === "CssSyntaxError" ? new CssSyntaxError(error) : error,
+			error.name === 'CssSyntaxError' ? new CssSyntaxError(error) : error,
 		);
 		return;
 	}
@@ -127,16 +127,16 @@ async function loader(content, map, meta) {
 	const api = [].concat(importPluginApi.sort(sort));
 
 	imports.unshift({
-		importName: "___CSS_LOADER_API_IMPORT___",
-		url: stringifyRequest(this, require.resolve("./runtime/api")),
+		importName: '___CSS_LOADER_API_IMPORT___',
+		url: stringifyRequest(this, require.resolve('./runtime/api')),
 	});
 
 	if (sourceMap) {
 		imports.unshift({
-			importName: "___CSS_LOADER_API_SOURCEMAP_IMPORT___",
+			importName: '___CSS_LOADER_API_SOURCEMAP_IMPORT___',
 			url: stringifyRequest(
 				this,
-				require.resolve("./runtime/cssWithMappingToString"),
+				require.resolve('./runtime/cssWithMappingToString'),
 			),
 		});
 	}
