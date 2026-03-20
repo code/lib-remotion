@@ -1525,7 +1525,6 @@
       "version": "4.0.438",
       "dependencies": {
         "autoprefixer": "10.4.20",
-        "css-loader": "5.2.7",
         "postcss": "8.4.47",
         "postcss-loader": "^7.3.0",
         "postcss-preset-env": "^8.3.2",
@@ -1548,7 +1547,6 @@
       "version": "4.0.438",
       "dependencies": {
         "@tailwindcss/webpack": "4.2.0",
-        "css-loader": "5.2.7",
         "style-loader": "4.0.0",
         "tailwindcss": "4.2.0",
       },

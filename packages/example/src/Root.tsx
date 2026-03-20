@@ -21,6 +21,7 @@ import {ColorInterpolation} from './ColorInterpolation';
 import {ComplexSounds} from './ComplexSounds';
 import {MyCtx, WrappedInContext} from './Context';
 import CorruptVideo from './CorruptVideo';
+import {CssLoaderTest} from './CssLoaderTest';
 import {DarkModeTest} from './DarkModeTest';
 import {DecoderDemo} from './DecoderDemo';
 import {DynamicDuration, dynamicDurationSchema} from './DynamicDuration';
@@ -668,6 +669,14 @@ export const Index: React.FC = () => {
 					height={1080}
 					fps={30}
 					durationInFrames={2}
+				/>
+				<Composition
+					id="css-loader-test"
+					component={CssLoaderTest}
+					width={1080}
+					height={1080}
+					fps={30}
+					durationInFrames={90}
 				/>
 				<Composition
 					id="react-svg"

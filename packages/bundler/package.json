@@ -54,6 +54,11 @@
 		"webpack",
 		"player"
 	],
+	"exports": {
+		".": "./dist/index.js",
+		"./css-loader": "./css-loader/index.js",
+		"./package.json": "./package.json"
+	},
 	"publishConfig": {
 		"access": "public"
 	},
