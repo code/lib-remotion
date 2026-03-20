@@ -1,3 +1,4 @@
+import {Card} from '@remotion/design';
 import React from 'react';
 
 const SwissIcon: React.FC = () => {
@@ -166,8 +167,8 @@ const StarIcon: React.FC = () => {
 export const TrustSection: React.FC = () => {
 	return (
 		<div className="mt-10">
-<div className="inline-flex flex-col lg:flex-row gap-4 flex-wrap">
-				<div className="lg:w-[300px] text-left flex-1">
+			<div className="inline-flex flex-col lg:flex-row gap-4 flex-wrap">
+				<Card className="lg:w-[300px] text-left px-4 py-6 flex-1">
 					<SwissIcon />
 					<div className="h-4" />
 					<div className="font-brand font-bold text-2xl mb-2">
@@ -177,8 +178,8 @@ export const TrustSection: React.FC = () => {
 						We are a company based in Zurich, Switzerland. We{"'"}re far away
 						from the craziness that is Silicon Valley.
 					</div>
-				</div>
-				<div className="lg:w-[300px] text-left flex-1">
+				</Card>
+				<Card className="lg:w-[300px] text-left px-4 py-6 flex-1">
 					<ProfitableIcon />
 					<div className="h-4" />
 					<div className="font-brand font-bold text-2xl mb-2">
@@ -194,8 +195,8 @@ export const TrustSection: React.FC = () => {
 						</a>
 						, we don{"'"}t need outside investment to sustain the business.
 					</div>
-				</div>
-				<div className="lg:w-[300px] text-left flex-1">
+				</Card>
+				<Card className="lg:w-[300px] text-left px-4 py-6 flex-1">
 					<KeyIcon />
 					<div className="h-4" />
 					<div className="font-brand font-bold text-2xl mb-2">
@@ -205,11 +206,11 @@ export const TrustSection: React.FC = () => {
 						Us founders own the company. And we just want one thing: Make
 						programmatic video glorious.
 					</div>
-				</div>
+				</Card>
 			</div>
-			<div className="h-10" />
+			<div className="h-4" />
 			<div className="inline-flex flex-col lg:flex-row gap-4 flex-wrap">
-				<div className="lg:w-[300px] text-left flex-1">
+				<Card className="lg:w-[300px] text-left px-4 py-6 flex-1">
 					<ClockIcon />
 					<div className="h-4" />
 					<div className="font-brand font-bold text-2xl mb-2">
@@ -219,8 +220,8 @@ export const TrustSection: React.FC = () => {
 						Making Remotion since 2021. No plans to change our business model
 						or sell the company.
 					</div>
-				</div>
-				<div className="lg:w-[300px] text-left flex-1">
+				</Card>
+				<Card className="lg:w-[300px] text-left px-4 py-6 flex-1">
 					<ShieldIcon />
 					<div className="h-4" />
 					<div className="font-brand font-bold text-2xl mb-2">
@@ -237,8 +238,8 @@ export const TrustSection: React.FC = () => {
 						</a>{' '}
 						will continue the project.
 					</div>
-				</div>
-				<div className="lg:w-[300px] text-left flex-1">
+				</Card>
+				<Card className="lg:w-[300px] text-left px-4 py-6 flex-1">
 					<UsersIcon />
 					<div className="h-4" />
 					<div className="font-brand font-bold text-2xl mb-2">
@@ -248,11 +249,11 @@ export const TrustSection: React.FC = () => {
 						More than 200 companies trust Remotion, from small businesses to
 						FAANG.
 					</div>
-				</div>
+				</Card>
 			</div>
-			<div className="h-10" />
+			<div className="h-4" />
 			<div className="inline-flex flex-col lg:flex-row gap-4 flex-wrap">
-				<div className="lg:w-[300px] text-left flex-1">
+				<Card className="lg:w-[300px] text-left px-4 py-6 flex-1">
 					<CodeIcon />
 					<div className="h-4" />
 					<div className="font-brand font-bold text-2xl mb-2">
@@ -262,8 +263,8 @@ export const TrustSection: React.FC = () => {
 						Our code is publicly available on GitHub. You can inspect, fork, and
 						self-host it. Full transparency, no black boxes.
 					</div>
-				</div>
-				<div className="lg:w-[300px] text-left flex-1">
+				</Card>
+				<Card className="lg:w-[300px] text-left px-4 py-6 flex-1">
 					<VideoIcon />
 					<div className="h-4" />
 					<div className="font-brand font-bold text-2xl mb-2">
@@ -273,8 +274,8 @@ export const TrustSection: React.FC = () => {
 						More than one million videos are rendered with Remotion every month.
 						Battle-tested at scale.
 					</div>
-				</div>
-				<div className="lg:w-[300px] text-left flex-1">
+				</Card>
+				<Card className="lg:w-[300px] text-left px-4 py-6 flex-1">
 					<StarIcon />
 					<div className="h-4" />
 					<div className="font-brand font-bold text-2xl mb-2">
@@ -284,7 +285,7 @@ export const TrustSection: React.FC = () => {
 						One of the most popular media projects on GitHub. Trusted by the
 						developer community.
 					</div>
-				</div>
+				</Card>
 			</div>
 		</div>
 	);
