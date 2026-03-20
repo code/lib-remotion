@@ -22,7 +22,9 @@
 	"dependencies": {
 		"@rspack/core": "1.7.6",
 		"@rspack/plugin-react-refresh": "1.6.1",
-		"css-loader": "5.2.7",
+		"loader-utils": "2.0.2",
+		"postcss": "8.5.1",
+		"postcss-value-parser": "4.2.0",
 		"esbuild": "0.25.0",
 		"react-refresh": "0.18.0",
 		"remotion": "workspace:*",
@@ -52,6 +54,11 @@
 		"webpack",
 		"player"
 	],
+	"exports": {
+		".": "./dist/index.js",
+		"./css-loader": "./css-loader/index.js",
+		"./package.json": "./package.json"
+	},
 	"publishConfig": {
 		"access": "public"
 	},

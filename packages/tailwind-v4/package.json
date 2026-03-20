@@ -20,7 +20,6 @@
 		"url": "https://github.com/remotion-dev/remotion/issues"
 	},
 	"dependencies": {
-		"css-loader": "5.2.7",
 		"style-loader": "4.0.0",
 		"tailwindcss": "4.2.0",
 		"@tailwindcss/webpack": "4.2.0"
