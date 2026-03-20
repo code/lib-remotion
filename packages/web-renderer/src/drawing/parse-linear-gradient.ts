@@ -97,6 +97,23 @@ const isFullyTransparent = (color: string): boolean => {
 	return rgba !== null && rgba.a === 0;
 };
 
+const findNearestNonTransparent = (
+	stops: ColorStop[],
+	fromIndex: number,
+	direction: -1 | 1,
+): string | null => {
+	let i = fromIndex + direction;
+	while (i >= 0 && i < stops.length) {
+		if (!isFullyTransparent(stops[i].color)) {
+			return stops[i].color;
+		}
+
+		i += direction;
+	}
+
+	return null;
+};
+
 const resolveTransparentStops = (stops: ColorStop[]): void => {
 	for (let i = 0; i < stops.length; i++) {
 		if (!isFullyTransparent(stops[i].color)) {
@@ -115,23 +132,6 @@ const resolveTransparentStops = (stops: ColorStop[]): void => {
 			}
 		}
 	}
-};
-
-const findNearestNonTransparent = (
-	stops: ColorStop[],
-	fromIndex: number,
-	direction: -1 | 1,
-): string | null => {
-	let i = fromIndex + direction;
-	while (i >= 0 && i < stops.length) {
-		if (!isFullyTransparent(stops[i].color)) {
-			return stops[i].color;
-		}
-
-		i += direction;
-	}
-
-	return null;
 };
 
 const parseColorStops = (colorStopsStr: string): ColorStop[] | null => {
