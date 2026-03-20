@@ -92,26 +92,6 @@ const cssColorToRgba = (
 	}
 };
 
-const resolveTransparentStops = (stops: ColorStop[]): void => {
-	for (let i = 0; i < stops.length; i++) {
-		if (stops[i].color.toLowerCase() !== 'transparent') {
-			continue;
-		}
-
-		// Find nearest non-transparent neighbor
-		const prev = findNearestNonTransparent(stops, i, -1);
-		const next = findNearestNonTransparent(stops, i, 1);
-		const neighbor = prev ?? next;
-
-		if (neighbor) {
-			const rgba = cssColorToRgba(neighbor);
-			if (rgba) {
-				stops[i].color = `rgba(${rgba.r}, ${rgba.g}, ${rgba.b}, 0)`;
-			}
-		}
-	}
-};
-
 const findNearestNonTransparent = (
 	stops: ColorStop[],
 	fromIndex: number,
@@ -127,6 +107,25 @@ const findNearestNonTransparent = (
 	}
 
 	return null;
+};
+
+const resolveTransparentStops = (stops: ColorStop[]): void => {
+	for (let i = 0; i < stops.length; i++) {
+		if (stops[i].color.toLowerCase() !== 'transparent') {
+			continue;
+		}
+
+		const prev = findNearestNonTransparent(stops, i, -1);
+		const next = findNearestNonTransparent(stops, i, 1);
+		const neighbor = prev ?? next;
+
+		if (neighbor) {
+			const rgba = cssColorToRgba(neighbor);
+			if (rgba) {
+				stops[i].color = `rgba(${rgba.r}, ${rgba.g}, ${rgba.b}, 0)`;
+			}
+		}
+	}
 };
 
 const parseColorStops = (colorStopsStr: string): ColorStop[] | null => {
