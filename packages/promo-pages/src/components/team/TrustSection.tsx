@@ -217,8 +217,8 @@ export const TrustSection: React.FC = () => {
 						5 years and counting
 					</div>
 					<div className="font-brand">
-						Making Remotion since 2021. No plans to change our business model
-						or sell the company.
+						Making Remotion since 2021. No plans to change our business model or
+						sell the company.
 					</div>
 				</Card>
 				<Card className="lg:w-[300px] text-left px-4 py-6 flex-1">
@@ -228,15 +228,15 @@ export const TrustSection: React.FC = () => {
 						Succession plan
 					</div>
 					<div className="font-brand">
-						If something happens to us,{' '}
+						If something happens to us, the project will fall under
 						<a
 							href="https://github.com/wcandillon"
 							target="_blank"
 							className="text-brand hover:underline underline-offset-4"
 						>
 							William Candillon
-						</a>{' '}
-						will continue the project.
+						</a>
+						{"'s"} supervision.
 					</div>
 				</Card>
 				<Card className="lg:w-[300px] text-left px-4 py-6 flex-1">
