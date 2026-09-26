@@ -207,7 +207,7 @@ jobs:
           php-version: '8.4'
           tools: none
       - name: Install Python dependencies
-        run: pip install pylint boto3 pytest
+        run: pip install pylint boto3 pytest==8.3.5
       - name: Install
         run: bun ci
       - name: Cache Turbo
