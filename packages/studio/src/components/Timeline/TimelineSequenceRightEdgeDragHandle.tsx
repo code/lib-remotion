@@ -1439,6 +1439,7 @@ const TimelineSequenceLeftEdgeDragHandleInner: React.FC<{
 					stringifySequenceSubscriptionKey(target.nodePath) === draggedKey,
 			);
 			const handleRect = e.currentTarget.getBoundingClientRect();
+			const initialEdgeClientX = handleRect.left + HANDLE_OUTSET;
 			const initialEdgeClientY = handleRect.top;
 			const initialTimelineEdge = latestRef.current.initialEdgeFrame;
 
@@ -1523,7 +1524,10 @@ const TimelineSequenceLeftEdgeDragHandleInner: React.FC<{
 					setTrimTooltip({
 						deltaFrames: appliedDelta,
 						edgeFrame: initialTimelineEdge + edgeDelta,
-						x: pointerEvent.clientX,
+						x:
+							initialEdgeClientX +
+							(edgeDelta / draggedTarget.parentPlaybackRate) *
+								dragState.pxPerFrame,
 						y: initialEdgeClientY,
 					});
 				}
@@ -2100,6 +2104,7 @@ const TimelineSequenceRightEdgeDragHandleInner: React.FC<{
 					stringifySequenceSubscriptionKey(target.nodePath) === draggedKey,
 			);
 			const handleRect = e.currentTarget.getBoundingClientRect();
+			const initialEdgeClientX = handleRect.right - HANDLE_OUTSET;
 			const initialEdgeClientY = handleRect.top;
 			const initialTimelineEdge = latestRef.current.initialEdgeFrame;
 
@@ -2168,7 +2173,10 @@ const TimelineSequenceRightEdgeDragHandleInner: React.FC<{
 					setTrimTooltip({
 						deltaFrames: appliedDelta,
 						edgeFrame: initialTimelineEdge + appliedDelta,
-						x: pointerEvent.clientX,
+						x:
+							initialEdgeClientX +
+							(appliedDelta / draggedTarget.parentPlaybackRate) *
+								dragState.pxPerFrame,
 						y: initialEdgeClientY,
 					});
 				}
